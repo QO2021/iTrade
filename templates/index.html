@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero-section bg-gradient-primary text-white py-5 mb-5 rounded">
+    <div class="container text-center">
+        <h1 class="display-4 fw-bold mb-4">
+            <i class="fas fa-chart-line me-3"></i>Welcome to iTrade.com
+        </h1>
+        <p class="lead mb-4">Professional Stock Trading Platform with Real-time Market Data and AI-Powered Analysis</p>
+        {% if not current_user.is_authenticated %}
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <a href="{{ url_for('register') }}" class="btn btn-light btn-lg me-3">
+                    <i class="fas fa-user-plus me-2"></i>Get Started
+                </a>
+                <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                </a>
+            </div>
+        </div>
+        {% else %}
+        <a href="{{ url_for('dashboard') }}" class="btn btn-light btn-lg">
+            <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <h2 class="mb-4">Market Features</h2>
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="feature-icon text-primary mb-3">
+                            <i class="fas fa-chart-candlestick fa-3x"></i>
+                        </div>
+                        <h5 class="card-title">Real-time Stock Data</h5>
+                        <p class="card-text">Access live stock prices, charts, and market data powered by Yahoo Finance API.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="feature-icon text-success mb-3">
+                            <i class="fas fa-university fa-3x"></i>
+                        </div>
+                        <h5 class="card-title">Economic Indicators</h5>
+                        <p class="card-text">Track CPI, interest rates, bond yields, house prices, and unemployment data from Federal Reserve.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="feature-icon text-info mb-3">
+                            <i class="fas fa-robot fa-3x"></i>
+                        </div>
+                        <h5 class="card-title">AI Market Analysis</h5>
+                        <p class="card-text">Get AI-powered sector analysis and market sentiment insights using advanced language models.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="feature-icon text-warning mb-3">
+                            <i class="fas fa-exchange-alt fa-3x"></i>
+                        </div>
+                        <h5 class="card-title">Easy Trading</h5>
+                        <p class="card-text">Execute trades with our intuitive interface and track your portfolio performance.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <h2 class="mb-4">Quick Stats</h2>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-3 text-muted">Market Status</h6>
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h4 class="text-success mb-0">OPEN</h4>
+                            <small class="text-muted">US Markets</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-primary mb-0">{{ "%.2f"|format(4.25) }}%</h4>
+                        <small class="text-muted">10Y Treasury</small>
+                    </div>
+                </div>
+                <hr>
+                <h6 class="card-subtitle mb-3 text-muted">Popular Stocks</h6>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>AAPL</span>
+                    <span class="text-success">+2.1%</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>MSFT</span>
+                    <span class="text-success">+1.8%</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>GOOGL</span>
+                    <span class="text-danger">-0.5%</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>TSLA</span>
+                    <span class="text-success">+3.2%</span>
+                </div>
+            </div>
+        </div>
+        
+        {% if not current_user.is_authenticated %}
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-body text-center">
+                <h5 class="card-title">Ready to Start Trading?</h5>
+                <p class="card-text">Join thousands of traders using our platform</p>
+                <a href="{{ url_for('register') }}" class="btn btn-primary">
+                    <i class="fas fa-user-plus me-2"></i>Create Account
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h3 class="card-title text-center mb-4">Why Choose iTrade.com?</h3>
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <i class="fas fa-shield-alt fa-2x text-primary mb-3"></i>
+                        <h5>Secure</h5>
+                        <p class="small text-muted">Bank-level security for your account and data</p>
+                    </div>
+                    <div class="col-md-3">
+                        <i class="fas fa-clock fa-2x text-success mb-3"></i>
+                        <h5>Real-time</h5>
+                        <p class="small text-muted">Live market data and instant trade execution</p>
+                    </div>
+                    <div class="col-md-3">
+                        <i class="fas fa-brain fa-2x text-info mb-3"></i>
+                        <h5>AI-Powered</h5>
+                        <p class="small text-muted">Smart analysis and market insights</p>
+                    </div>
+                    <div class="col-md-3">
+                        <i class="fas fa-mobile-alt fa-2x text-warning mb-3"></i>
+                        <h5>Responsive</h5>
+                        <p class="small text-muted">Access from any device, anywhere</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

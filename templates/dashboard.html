@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - iTrade.com{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Trading Dashboard</h1>
+            <div class="text-muted">
+                <i class="fas fa-clock me-1"></i>
+                <span id="current-time"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title mb-3">
+                    <i class="fas fa-search me-2"></i>Stock Search
+                </h5>
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="input-group">
+                            <input type="text" id="stock-search" class="form-control form-control-lg" 
+                                   placeholder="Search for stocks (e.g., AAPL, GOOGL, MSFT)">
+                            <button class="btn btn-primary" type="button" id="search-btn">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                        <div id="search-results" class="mt-2"></div>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <a href="{{ url_for('trade') }}" class="btn btn-success btn-lg">
+                            <i class="fas fa-exchange-alt me-2"></i>Execute Trade
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="text-primary mb-2">
+                    <i class="fas fa-chart-line fa-2x"></i>
+                </div>
+                <h5 class="card-title">Market Status</h5>
+                <h3 class="text-success">OPEN</h3>
+                <small class="text-muted">US Markets</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="text-info mb-2">
+                    <i class="fas fa-percentage fa-2x"></i>
+                </div>
+                <h5 class="card-title">Interest Rate</h5>
+                <h3 class="text-primary">5.25%</h3>
+                <small class="text-muted">Federal Funds Rate</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="text-warning mb-2">
+                    <i class="fas fa-chart-area fa-2x"></i>
+                </div>
+                <h5 class="card-title">10Y Treasury</h5>
+                <h3 class="text-warning">4.35%</h3>
+                <small class="text-muted">Bond Yield</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="text-danger mb-2">
+                    <i class="fas fa-users fa-2x"></i>
+                </div>
+                <h5 class="card-title">Unemployment</h5>
+                <h3 class="text-danger">3.7%</h3>
+                <small class="text-muted">Latest Rate</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title mb-4">
+                    <i class="fas fa-fire me-2"></i>Trending Stocks
+                </h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Symbol</th>
+                                <th>Company</th>
+                                <th>Price</th>
+                                <th>Change</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>AAPL</strong></td>
+                                <td>Apple Inc.</td>
+                                <td>$182.50</td>
+                                <td class="text-success">+2.1%</td>
+                                <td>
+                                    <a href="{{ url_for('stock_detail', symbol='AAPL') }}" class="btn btn-sm btn-outline-primary">
+                                        View Details
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>MSFT</strong></td>
+                                <td>Microsoft Corp.</td>
+                                <td>$378.85</td>
+                                <td class="text-success">+1.8%</td>
+                                <td>
+                                    <a href="{{ url_for('stock_detail', symbol='MSFT') }}" class="btn btn-sm btn-outline-primary">
+                                        View Details
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>GOOGL</strong></td>
+                                <td>Alphabet Inc.</td>
+                                <td>$142.20</td>
+                                <td class="text-danger">-0.5%</td>
+                                <td>
+                                    <a href="{{ url_for('stock_detail', symbol='GOOGL') }}" class="btn btn-sm btn-outline-primary">
+                                        View Details
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>TSLA</strong></td>
+                                <td>Tesla Inc.</td>
+                                <td>$248.42</td>
+                                <td class="text-success">+3.2%</td>
+                                <td>
+                                    <a href="{{ url_for('stock_detail', symbol='TSLA') }}" class="btn btn-sm btn-outline-primary">
+                                        View Details
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>NVDA</strong></td>
+                                <td>NVIDIA Corp.</td>
+                                <td>$785.20</td>
+                                <td class="text-success">+4.1%</td>
+                                <td>
+                                    <a href="{{ url_for('stock_detail', symbol='NVDA') }}" class="btn btn-sm btn-outline-primary">
+                                        View Details
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">
+                    <i class="fas fa-chart-pie me-2"></i>Your Portfolio
+                </h5>
+                <div class="text-center mb-3">
+                    <h3 class="text-success">$0.00</h3>
+                    <small class="text-muted">Total Value</small>
+                </div>
+                <div class="d-grid">
+                    <a href="{{ url_for('portfolio') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-briefcase me-2"></i>View Portfolio
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title mb-3">
+                    <i class="fas fa-newspaper me-2"></i>Market News
+                </h5>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item border-0 px-0">
+                        <h6 class="mb-1">Federal Reserve Maintains Interest Rates</h6>
+                        <small class="text-muted">Fed keeps rates steady at 5.25-5.50%</small>
+                    </div>
+                    <div class="list-group-item border-0 px-0">
+                        <h6 class="mb-1">Tech Stocks Rally on AI Optimism</h6>
+                        <small class="text-muted">Major tech companies see gains</small>
+                    </div>
+                    <div class="list-group-item border-0 px-0">
+                        <h6 class="mb-1">Energy Sector Shows Strength</h6>
+                        <small class="text-muted">Oil prices remain stable</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Update current time
+function updateTime() {
+    const now = new Date();
+    document.getElementById('current-time').textContent = now.toLocaleTimeString();
+}
+updateTime();
+setInterval(updateTime, 1000);
+
+// Stock search functionality
+document.getElementById('stock-search').addEventListener('input', function() {
+    const query = this.value;
+    if (query.length > 0) {
+        fetch(`/api/stock_search?q=${query}`)
+            .then(response => response.json())
+            .then(data => {
+                const resultsDiv = document.getElementById('search-results');
+                if (data.length > 0) {
+                    resultsDiv.innerHTML = data.map(stock => 
+                        `<a href="/stock/${stock.symbol}" class="btn btn-outline-secondary btn-sm me-2 mb-2">${stock.symbol}</a>`
+                    ).join('');
+                } else {
+                    resultsDiv.innerHTML = '';
+                }
+            });
+    } else {
+        document.getElementById('search-results').innerHTML = '';
+    }
+});
+
+document.getElementById('search-btn').addEventListener('click', function() {
+    const query = document.getElementById('stock-search').value.toUpperCase();
+    if (query) {
+        window.location.href = `/stock/${query}`;
+    }
+});
+
+// Enter key support for search
+document.getElementById('stock-search').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        document.getElementById('search-btn').click();
+    }
+});
+</script>
+{% endblock %}

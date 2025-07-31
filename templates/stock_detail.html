@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}{{ symbol }} - Stock Details - iTrade.com{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">{{ symbol }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div>
+                        <h2 class="fw-bold">{{ symbol }}</h2>
+                        <h5 class="text-muted">{{ stock_info.get('longName', 'N/A') }}</h5>
+                        <span class="badge bg-primary">{{ stock_info.get('sector', 'N/A') }}</span>
+                    </div>
+                    <div class="text-end">
+                        <h3 class="fw-bold">${{ "%.2f"|format(stock_info.get('currentPrice', 0)) }}</h3>
+                        <p class="mb-0 {% if stock_info.get('regularMarketChangePercent', 0) > 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ "%.2f"|format(stock_info.get('regularMarketChange', 0)) }} 
+                            ({{ "%.2f"|format(stock_info.get('regularMarketChangePercent', 0) * 100) }}%)
+                        </p>
+                    </div>
+                </div>
+                
+                <div id="stock-chart" style="width:100%;height:400px;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">
+                    <i class="fas fa-exchange-alt me-2"></i>Quick Trade
+                </h5>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('trade') }}?symbol={{ symbol }}" class="btn btn-success">
+                        <i class="fas fa-arrow-up me-2"></i>Buy {{ symbol }}
+                    </a>
+                    <a href="{{ url_for('trade') }}?symbol={{ symbol }}&action=SELL" class="btn btn-danger">
+                        <i class="fas fa-arrow-down me-2"></i>Sell {{ symbol }}
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">
+                    <i class="fas fa-info-circle me-2"></i>Key Statistics
+                </h5>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <small class="text-muted">Market Cap</small>
+                        <div class="fw-bold">${{ "{:,.0f}".format(stock_info.get('marketCap', 0) / 1e9) }}B</div>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted">P/E Ratio</small>
+                        <div class="fw-bold">{{ "%.2f"|format(stock_info.get('trailingPE', 0)) }}</div>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted">52W High</small>
+                        <div class="fw-bold">${{ "%.2f"|format(stock_info.get('fiftyTwoWeekHigh', 0)) }}</div>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted">52W Low</small>
+                        <div class="fw-bold">${{ "%.2f"|format(stock_info.get('fiftyTwoWeekLow', 0)) }}</div>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted">Volume</small>
+                        <div class="fw-bold">{{ "{:,.0f}".format(stock_info.get('volume', 0)) }}</div>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted">Avg Volume</small>
+                        <div class="fw-bold">{{ "{:,.0f}".format(stock_info.get('averageVolume', 0)) }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title mb-3">
+                    <i class="fas fa-university me-2"></i>Economic Indicators
+                </h5>
+                {% if economic_data %}
+                <div class="row g-3">
+                    {% if economic_data.cpi %}
+                    <div class="col-6">
+                        <small class="text-muted">CPI</small>
+                        <div class="fw-bold">{{ "%.1f"|format(economic_data.cpi) }}</div>
+                    </div>
+                    {% endif %}
+                    {% if economic_data.unemployment %}
+                    <div class="col-6">
+                        <small class="text-muted">Unemployment</small>
+                        <div class="fw-bold">{{ "%.1f"|format(economic_data.unemployment) }}%</div>
+                    </div>
+                    {% endif %}
+                    {% if economic_data.interest_rate %}
+                    <div class="col-6">
+                        <small class="text-muted">Fed Rate</small>
+                        <div class="fw-bold">{{ "%.2f"|format(economic_data.interest_rate) }}%</div>
+                    </div>
+                    {% endif %}
+                    {% if economic_data.bond_yield %}
+                    <div class="col-6">
+                        <small class="text-muted">10Y Treasury</small>
+                        <div class="fw-bold">{{ "%.2f"|format(economic_data.bond_yield) }}%</div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <p class="text-muted">Economic data unavailable</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title mb-3">
+                    <i class="fas fa-chart-bar me-2"></i>Company Overview
+                </h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Industry:</strong> {{ stock_info.get('industry', 'N/A') }}</p>
+                        <p><strong>Sector:</strong> {{ stock_info.get('sector', 'N/A') }}</p>
+                        <p><strong>Country:</strong> {{ stock_info.get('country', 'N/A') }}</p>
+                        <p><strong>Employees:</strong> {{ "{:,}".format(stock_info.get('fullTimeEmployees', 0)) if stock_info.get('fullTimeEmployees') else 'N/A' }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Website:</strong> 
+                            {% if stock_info.get('website') %}
+                            <a href="{{ stock_info.website }}" target="_blank" class="text-decoration-none">{{ stock_info.website }}</a>
+                            {% else %}
+                            N/A
+                            {% endif %}
+                        </p>
+                        <p><strong>Exchange:</strong> {{ stock_info.get('exchange', 'N/A') }}</p>
+                        <p><strong>Currency:</strong> {{ stock_info.get('currency', 'N/A') }}</p>
+                    </div>
+                </div>
+                {% if stock_info.get('longBusinessSummary') %}
+                <h6 class="mt-3">Business Summary</h6>
+                <p class="text-muted">{{ stock_info.longBusinessSummary[:500] }}{% if stock_info.longBusinessSummary|length > 500 %}...{% endif %}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title mb-3">
+                    <i class="fas fa-robot me-2"></i>AI Sector Analysis
+                </h5>
+                {% if sector_analysis %}
+                <div class="alert alert-info">
+                    <small>{{ sector_analysis }}</small>
+                </div>
+                {% else %}
+                <p class="text-muted">AI analysis not available at this time.</p>
+                {% endif %}
+                
+                <div class="mt-3">
+                    <h6>Risk Assessment</h6>
+                    <div class="progress mb-2">
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: 65%"></div>
+                    </div>
+                    <small class="text-muted">Moderate Risk</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Render stock chart
+var graphDiv = document.getElementById('stock-chart');
+var graphs = {{ graphJSON|safe }};
+Plotly.plot(graphDiv, graphs, {});
+</script>
+{% endblock %}

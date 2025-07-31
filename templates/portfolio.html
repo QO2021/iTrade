@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Portfolio - iTrade.com{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1>My Portfolio</h1>
+            <a href="{{ url_for('trade') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>New Trade
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <div class="text-success mb-2">
+                    <i class="fas fa-dollar-sign fa-2x"></i>
+                </div>
+                <h5 class="card-title">Total Value</h5>
+                <h3 class="text-success">$0.00</h3>
+                <small class="text-muted">Portfolio Value</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <div class="text-primary mb-2">
+                    <i class="fas fa-chart-line fa-2x"></i>
+                </div>
+                <h5 class="card-title">Day Change</h5>
+                <h3 class="text-primary">$0.00</h3>
+                <small class="text-muted">0.00%</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <div class="text-info mb-2">
+                    <i class="fas fa-list fa-2x"></i>
+                </div>
+                <h5 class="card-title">Total Trades</h5>
+                <h3 class="text-info">{{ trades|length }}</h3>
+                <small class="text-muted">Executed</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <div class="text-warning mb-2">
+                    <i class="fas fa-coins fa-2x"></i>
+                </div>
+                <h5 class="card-title">Available Cash</h5>
+                <h3 class="text-warning">$10,000</h3>
+                <small class="text-muted">Demo Account</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom-0">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>Trade History
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if trades %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Symbol</th>
+                                <th>Action</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for trade in trades %}
+                            <tr>
+                                <td>{{ trade.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>
+                                    <a href="{{ url_for('stock_detail', symbol=trade.symbol) }}" 
+                                       class="text-decoration-none fw-bold">
+                                        {{ trade.symbol }}
+                                    </a>
+                                </td>
+                                <td>
+                                    {% if trade.action == 'BUY' %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-arrow-up me-1"></i>{{ trade.action }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-arrow-down me-1"></i>{{ trade.action }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ trade.quantity }}</td>
+                                <td>${{ "%.2f"|format(trade.price) }}</td>
+                                <td>${{ "%.2f"|format(trade.quantity * trade.price) }}</td>
+                                <td>
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check me-1"></i>Completed
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-chart-line fa-4x text-muted mb-3"></i>
+                    <h4 class="text-muted">No trades yet</h4>
+                    <p class="text-muted mb-4">Start building your portfolio by executing your first trade.</p>
+                    <a href="{{ url_for('trade') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus me-2"></i>Execute First Trade
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if trades %}
+<div class="row mt-4">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title mb-3">
+                    <i class="fas fa-chart-pie me-2"></i>Portfolio Allocation
+                </h5>
+                <div id="portfolio-chart" style="height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title mb-3">
+                    <i class="fas fa-chart-bar me-2"></i>Performance Summary
+                </h5>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h6 class="mb-1">Best Performer</h6>
+                            <div class="fw-bold text-success">-</div>
+                            <small class="text-muted">No data yet</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h6 class="mb-1">Worst Performer</h6>
+                            <div class="fw-bold text-danger">-</div>
+                            <small class="text-muted">No data yet</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h6 class="mb-1">Total Invested</h6>
+                            <div class="fw-bold text-primary">
+                                ${{ "%.2f"|format(trades|selectattr('action', 'equalto', 'BUY')|map(attribute='price')|list|sum if trades else 0) }}
+                            </div>
+                            <small class="text-muted">Buy orders</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h6 class="mb-1">Diversity Score</h6>
+                            <div class="fw-bold text-info">
+                                {{ trades|map(attribute='symbol')|unique|list|length if trades else 0 }}
+                            </div>
+                            <small class="text-muted">Unique stocks</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <h6>Risk Level</h6>
+                    <div class="progress mb-2">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: 30%"></div>
+                    </div>
+                    <small class="text-muted">Low Risk Portfolio</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if trades %}
+<script>
+// Portfolio allocation chart
+const symbols = {};
+{% for trade in trades %}
+    if (!symbols['{{ trade.symbol }}']) {
+        symbols['{{ trade.symbol }}'] = 0;
+    }
+    {% if trade.action == 'BUY' %}
+        symbols['{{ trade.symbol }}'] += {{ trade.quantity * trade.price }};
+    {% else %}
+        symbols['{{ trade.symbol }}'] -= {{ trade.quantity * trade.price }};
+    {% endif %}
+{% endfor %}
+
+const data = [{
+    values: Object.values(symbols),
+    labels: Object.keys(symbols),
+    type: 'pie',
+    marker: {
+        colors: ['#0d6efd', '#198754', '#dc3545', '#ffc107', '#6f42c1', '#fd7e14']
+    }
+}];
+
+const layout = {
+    margin: {t: 0, b: 0, l: 0, r: 0},
+    showlegend: true,
+    legend: {orientation: 'h', y: -0.1}
+};
+
+Plotly.newPlot('portfolio-chart', data, layout, {responsive: true});
+</script>
+{% endif %}
+{% endblock %}

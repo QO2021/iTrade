@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}Correlation Analysis - iTrade.com{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-chart-line me-2"></i>Stock Correlation Analysis
+        </h1>
+        <p class="text-muted mb-4">Analyze correlations between different stocks to understand market relationships and diversification opportunities.</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title mb-3">
+                    <i class="fas fa-plus-circle me-2"></i>Select Stocks to Analyze
+                </h5>
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="input-group mb-3">
+                            <input type="text" id="symbol-input" class="form-control" 
+                                   placeholder="Enter stock symbol (e.g., AAPL)">
+                            <button class="btn btn-primary" type="button" id="add-symbol-btn">
+                                <i class="fas fa-plus"></i> Add
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="selected-symbols" class="mb-3">
+                    <h6>Selected Symbols:</h6>
+                    <div id="symbol-badges"></div>
+                </div>
+                
+                <button id="analyze-btn" class="btn btn-success" disabled>
+                    <i class="fas fa-chart-area me-2"></i>Analyze Correlations
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title">Quick Add Popular Stocks</h6>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary btn-sm quick-add" data-symbol="AAPL">Apple (AAPL)</button>
+                    <button class="btn btn-outline-primary btn-sm quick-add" data-symbol="GOOGL">Google (GOOGL)</button>
+                    <button class="btn btn-outline-primary btn-sm quick-add" data-symbol="MSFT">Microsoft (MSFT)</button>
+                    <button class="btn btn-outline-primary btn-sm quick-add" data-symbol="AMZN">Amazon (AMZN)</button>
+                    <button class="btn btn-outline-primary btn-sm quick-add" data-symbol="TSLA">Tesla (TSLA)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="results-section" style="display: none;">
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="fas fa-table me-2"></i>Price Correlation Matrix
+                    </h5>
+                    <div class="table-responsive">
+                        <table id="price-correlation-table" class="table table-striped">
+                            <thead class="table-dark"></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="fas fa-percentage me-2"></i>Returns Correlation Matrix
+                    </h5>
+                    <div class="table-responsive">
+                        <table id="returns-correlation-table" class="table table-striped">
+                            <thead class="table-dark"></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="fas fa-lightbulb me-2"></i>Correlation Insights
+                    </h5>
+                    <div id="correlation-insights">
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-info-circle me-2"></i>Understanding Correlation</h6>
+                            <ul class="mb-0">
+                                <li><strong>1.0:</strong> Perfect positive correlation (stocks move together)</li>
+                                <li><strong>0.0:</strong> No correlation (independent movement)</li>
+                                <li><strong>-1.0:</strong> Perfect negative correlation (stocks move opposite)</li>
+                                <li><strong>0.7+:</strong> Strong positive correlation</li>
+                                <li><strong>0.3-0.7:</strong> Moderate correlation</li>
+                                <li><strong>Below 0.3:</strong> Weak correlation</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedSymbols = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    const symbolInput = document.getElementById('symbol-input');
+    const addBtn = document.getElementById('add-symbol-btn');
+    const analyzeBtn = document.getElementById('analyze-btn');
+    const symbolBadges = document.getElementById('symbol-badges');
+    const quickAddBtns = document.querySelectorAll('.quick-add');
+    
+    addBtn.addEventListener('click', addSymbol);
+    symbolInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            addSymbol();
+        }
+    });
+    
+    quickAddBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const symbol = this.dataset.symbol;
+            if (!selectedSymbols.includes(symbol)) {
+                selectedSymbols.push(symbol);
+                updateSymbolDisplay();
+            }
+        });
+    });
+    
+    analyzeBtn.addEventListener('click', analyzeCorrelations);
+    
+    function addSymbol() {
+        const symbol = symbolInput.value.trim().toUpperCase();
+        if (symbol && !selectedSymbols.includes(symbol)) {
+            selectedSymbols.push(symbol);
+            symbolInput.value = '';
+            updateSymbolDisplay();
+        }
+    }
+    
+    function updateSymbolDisplay() {
+        symbolBadges.innerHTML = '';
+        selectedSymbols.forEach(symbol => {
+            const badge = document.createElement('span');
+            badge.className = 'badge bg-primary me-2 mb-2';
+            badge.innerHTML = `${symbol} <i class="fas fa-times ms-1" style="cursor: pointer;" onclick="removeSymbol('${symbol}')"></i>`;
+            symbolBadges.appendChild(badge);
+        });
+        
+        analyzeBtn.disabled = selectedSymbols.length < 2;
+    }
+    
+    window.removeSymbol = function(symbol) {
+        selectedSymbols = selectedSymbols.filter(s => s !== symbol);
+        updateSymbolDisplay();
+    };
+    
+    function analyzeCorrelations() {
+        if (selectedSymbols.length < 2) return;
+        
+        analyzeBtn.disabled = true;
+        analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Analyzing...';
+        
+        fetch('/api/correlation', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({symbols: selectedSymbols})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+            
+            displayCorrelationResults(data);
+            document.getElementById('results-section').style.display = 'block';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error analyzing correlations');
+        })
+        .finally(() => {
+            analyzeBtn.disabled = false;
+            analyzeBtn.innerHTML = '<i class="fas fa-chart-area me-2"></i>Analyze Correlations';
+        });
+    }
+    
+    function displayCorrelationResults(data) {
+        displayCorrelationTable('price-correlation-table', data.price_correlation, data.symbols, 'Price');
+        displayCorrelationTable('returns-correlation-table', data.returns_correlation, data.symbols, 'Returns');
+    }
+    
+    function displayCorrelationTable(tableId, correlationData, symbols, type) {
+        const table = document.getElementById(tableId);
+        const thead = table.querySelector('thead');
+        const tbody = table.querySelector('tbody');
+        
+        // Clear existing content
+        thead.innerHTML = '';
+        tbody.innerHTML = '';
+        
+        // Create header
+        const headerRow = thead.insertRow();
+        headerRow.insertCell().outerHTML = '<th>' + type + '</th>';
+        symbols.forEach(symbol => {
+            headerRow.insertCell().outerHTML = '<th>' + symbol + '</th>';
+        });
+        
+        // Create body
+        symbols.forEach(rowSymbol => {
+            const row = tbody.insertRow();
+            row.insertCell().innerHTML = '<strong>' + rowSymbol + '</strong>';
+            
+            symbols.forEach(colSymbol => {
+                const cell = row.insertCell();
+                const correlation = correlationData[rowSymbol][colSymbol];
+                const value = correlation.toFixed(3);
+                
+                let className = '';
+                if (Math.abs(correlation) >= 0.7) {
+                    className = correlation > 0 ? 'bg-success text-white' : 'bg-danger text-white';
+                } else if (Math.abs(correlation) >= 0.3) {
+                    className = correlation > 0 ? 'bg-warning' : 'bg-info text-white';
+                }
+                
+                cell.innerHTML = value;
+                cell.className = className;
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -47,6 +47,12 @@ mail = Mail(app)
 # Initialize APIs
 fred = Fred(api_key=FRED_API_KEY) if FRED_API_KEY else None
 
+# Import additional analysis modules
+import pandas as pd
+import numpy as np
+from scipy.stats import pearsonr
+from sklearn.preprocessing import StandardScaler
+
 # User model
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -275,7 +281,45 @@ def trade():
 @login_required
 def portfolio():
     trades = Trade.query.filter_by(user_id=current_user.id).order_by(Trade.timestamp.desc()).all()
-    return render_template('portfolio.html', trades=trades)
+    performance_data = get_portfolio_performance(current_user.id)
+    return render_template('portfolio.html', trades=trades, performance=performance_data)
+
+@app.route('/correlation')
+@login_required
+def correlation_analysis():
+    return render_template('correlation.html')
+
+@app.route('/api/correlation', methods=['POST'])
+@login_required
+def api_correlation():
+    symbols = request.json.get('symbols', [])
+    if len(symbols) < 2:
+        return jsonify({'error': 'Need at least 2 symbols for correlation analysis'})
+    
+    correlation_data = get_correlation_analysis(symbols)
+    return jsonify(correlation_data)
+
+@app.route('/market_analysis')
+@login_required
+def market_analysis():
+    # Get user's portfolio symbols for analysis
+    trades = Trade.query.filter_by(user_id=current_user.id).all()
+    portfolio_symbols = list(set([trade.symbol for trade in trades]))
+    
+    # Default symbols if no portfolio
+    if not portfolio_symbols:
+        portfolio_symbols = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA']
+    
+    # Get comprehensive analysis
+    news_analysis = get_comprehensive_news_analysis(portfolio_symbols[:5])  # Limit to 5 symbols
+    economic_data = get_economic_indicators()
+    correlation_data = get_correlation_analysis(portfolio_symbols[:5])
+    
+    return render_template('market_analysis.html', 
+                         news_analysis=news_analysis,
+                         economic_data=economic_data,
+                         correlation_data=correlation_data,
+                         symbols=portfolio_symbols[:5])
 
 @app.route('/api/stock_search')
 @login_required
@@ -287,11 +331,12 @@ def stock_search():
     try:
         # Simple stock search (in production, use a proper stock search API)
         suggestions = []
-        common_stocks = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA', 'META', 'NVDA', 'AMD', 'INTC', 'NFLX']
+        common_stocks = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA', 'META', 'NVDA', 'AMD', 'INTC', 'NFLX', 
+                        'JPM', 'BAC', 'WMT', 'JNJ', 'PG', 'V', 'MA', 'DIS', 'NKLA', 'PYPL', 'CRM', 'ORCL']
         for stock in common_stocks:
             if query.upper() in stock:
                 suggestions.append({'symbol': stock, 'name': stock})
-        return jsonify(suggestions[:5])
+        return jsonify(suggestions[:10])
     except:
         return jsonify([])
 
@@ -336,6 +381,16 @@ def get_economic_indicators():
                 indicators['bond_yield'] = bond_yield_data.iloc[-1]
             if len(house_price_data) > 0:
                 indicators['house_price'] = house_price_data.iloc[-1]
+                
+            # Get VIX data (volatility index)
+            try:
+                vix_ticker = yf.Ticker("^VIX")
+                vix_data = vix_ticker.history(period="5d")
+                if len(vix_data) > 0:
+                    indicators['vix'] = vix_data['Close'].iloc[-1]
+            except:
+                pass
+                
         except Exception as e:
             print(f"Error fetching economic data: {e}")
     return indicators
@@ -366,6 +421,150 @@ def get_sector_analysis(sector):
     except Exception as e:
         print(f"Error getting sector analysis: {e}")
         return "Sector analysis temporarily unavailable"
+
+def get_correlation_analysis(symbols):
+    """Calculate correlation between multiple stocks"""
+    try:
+        if len(symbols) < 2:
+            return {}
+        
+        # Get historical data for all symbols
+        data = {}
+        for symbol in symbols:
+            ticker = yf.Ticker(symbol)
+            hist = ticker.history(period="6mo")['Close']
+            if len(hist) > 0:
+                data[symbol] = hist
+        
+        if len(data) < 2:
+            return {}
+        
+        # Create DataFrame with aligned dates
+        df = pd.DataFrame(data)
+        df = df.dropna()
+        
+        # Calculate correlation matrix
+        correlation_matrix = df.corr()
+        
+        # Calculate returns correlation
+        returns = df.pct_change().dropna()
+        returns_correlation = returns.corr()
+        
+        return {
+            'price_correlation': correlation_matrix.to_dict(),
+            'returns_correlation': returns_correlation.to_dict(),
+            'symbols': list(df.columns)
+        }
+    except Exception as e:
+        print(f"Error calculating correlation: {e}")
+        return {}
+
+def get_comprehensive_news_analysis(symbols):
+    """Get comprehensive news analysis for multiple stocks using LLM"""
+    if not OPENAI_API_KEY or not symbols:
+        return "News analysis not available"
+    
+    try:
+        from openai import OpenAI
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        
+        symbols_str = ", ".join(symbols)
+        
+        # Get market indicators for context
+        economic_data = get_economic_indicators()
+        vix_context = f"VIX: {economic_data.get('vix', 'N/A')}"
+        
+        prompt = f"""As a financial analyst, provide a comprehensive market analysis for the following stocks: {symbols_str}
+
+Context:
+- Current market conditions: {vix_context}
+- Interest rates: {economic_data.get('interest_rate', 'N/A')}%
+- Unemployment: {economic_data.get('unemployment', 'N/A')}%
+
+Please analyze:
+1. Current market sentiment and trends affecting these stocks
+2. Sector-specific news and developments
+3. Economic factors that may influence performance
+4. Short-term outlook (1-3 months)
+5. Risk factors to consider
+
+Provide actionable insights in under 400 words."""
+        
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are an expert financial analyst providing comprehensive market analysis."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=500,
+            temperature=0.7
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"Error getting news analysis: {e}")
+        return "News analysis temporarily unavailable"
+
+def get_portfolio_performance(user_id):
+    """Calculate portfolio performance metrics"""
+    trades = Trade.query.filter_by(user_id=user_id).all()
+    if not trades:
+        return {}
+    
+    try:
+        # Group trades by symbol
+        positions = {}
+        for trade in trades:
+            symbol = trade.symbol
+            if symbol not in positions:
+                positions[symbol] = {'quantity': 0, 'total_cost': 0, 'trades': []}
+            
+            if trade.action == 'BUY':
+                positions[symbol]['quantity'] += trade.quantity
+                positions[symbol]['total_cost'] += trade.quantity * trade.price
+            else:  # SELL
+                positions[symbol]['quantity'] -= trade.quantity
+                positions[symbol]['total_cost'] -= trade.quantity * trade.price
+            
+            positions[symbol]['trades'].append(trade)
+        
+        # Calculate current values and performance
+        portfolio_value = 0
+        total_cost = 0
+        performance_data = {}
+        
+        for symbol, position in positions.items():
+            if position['quantity'] > 0:  # Only include current holdings
+                try:
+                    ticker = yf.Ticker(symbol)
+                    current_price = ticker.info.get('currentPrice', 0)
+                    
+                    current_value = position['quantity'] * current_price
+                    avg_cost = position['total_cost'] / position['quantity'] if position['quantity'] > 0 else 0
+                    
+                    portfolio_value += current_value
+                    total_cost += position['total_cost']
+                    
+                    performance_data[symbol] = {
+                        'quantity': position['quantity'],
+                        'avg_cost': avg_cost,
+                        'current_price': current_price,
+                        'current_value': current_value,
+                        'gain_loss': current_value - (avg_cost * position['quantity']),
+                        'gain_loss_pct': ((current_price - avg_cost) / avg_cost * 100) if avg_cost > 0 else 0
+                    }
+                except:
+                    continue
+        
+        return {
+            'total_value': portfolio_value,
+            'total_cost': total_cost,
+            'total_gain_loss': portfolio_value - total_cost,
+            'total_gain_loss_pct': ((portfolio_value - total_cost) / total_cost * 100) if total_cost > 0 else 0,
+            'positions': performance_data
+        }
+    except Exception as e:
+        print(f"Error calculating portfolio performance: {e}")
+        return {}
 
 if __name__ == '__main__':
     with app.app_context():

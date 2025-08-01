@@ -1,206 +1,227 @@
 # iTrade.com - Professional Stock Trading Platform
 
-A comprehensive stock trading website built with Python Flask, featuring real-time market data, AI-powered analysis, and modern web technologies.
+## 🚀 Overview
 
-## Features
+iTrade.com is a comprehensive stock trading platform built with Python Flask, featuring real-time market data, AI-powered analysis, and professional-grade portfolio management tools.
+
+## ✨ Features
 
 ### 🔐 User Authentication
-- User registration with email verification
-- Secure login/logout system
-- Password reset functionality via email
-- Session management with Flask-Login
+- **Secure Registration & Login**: Email-based account creation
+- **Password Recovery**: Forgot password functionality with email verification
+- **Session Management**: Secure user sessions with Flask-Login
 
-### 📊 Market Data Integration
-- **Yahoo Finance API**: Real-time stock prices, charts, and company information
-- **Federal Reserve (FRED) API**: Economic indicators including:
+### 📊 Market Data & Analysis
+- **Real-time Stock Data**: Powered by Yahoo Finance API
+- **Economic Indicators**: Fed St. Louis FRED API integration
   - Consumer Price Index (CPI)
-  - Interest rates
-  - Bond yields
-  - House prices
-  - Unemployment rates
+  - Federal Funds Interest Rate
+  - 10-Year Treasury Bond Yield
+  - House Price Index
+  - Unemployment Rate
+  - VIX Volatility Index
 
-### 🤖 AI-Powered Analysis
-- OpenAI integration for sector analysis
-- Financial and political news sentiment analysis
-- Market trend predictions
-- Risk assessment for stock sectors
+### 🤖 AI-Powered Insights
+- **LLM Market Analysis**: OpenAI GPT integration for comprehensive market sentiment analysis
+- **News Analysis**: AI-driven analysis of market trends and sector performance
+- **Risk Assessment**: Automated risk evaluation based on economic indicators
 
-### 💼 Trading Features
-- Simulated stock trading (buy/sell)
-- Portfolio management and tracking
-- Trade history and performance analytics
-- Real-time price charts with Plotly
+### 📈 Advanced Analytics
+- **Correlation Analysis**: Multi-stock correlation matrices for portfolio diversification
+- **Performance Metrics**: Real-time P&L calculations and portfolio performance tracking
+- **Interactive Charts**: Plotly-powered candlestick charts and visualizations
+
+### 💼 Portfolio Management
+- **Trade Execution**: Buy/Sell order management
+- **Position Tracking**: Real-time position monitoring with gain/loss calculations
+- **Trade History**: Comprehensive trading history with detailed records
+- **Performance Dashboard**: Portfolio value, P&L, and allocation analysis
 
 ### 🎨 Modern UI/UX
-- Responsive Bootstrap 5 design
-- Interactive charts and visualizations
-- Real-time market status updates
-- Mobile-friendly interface
+- **Responsive Design**: Bootstrap 5 with custom styling
+- **Dark Theme Support**: Professional trading interface
+- **Interactive Components**: Real-time search and dynamic content updates
+- **Mobile Optimized**: Full functionality across all devices
 
-## Technology Stack
+## 🛠️ Technology Stack
 
-- **Backend**: Python Flask
-- **Database**: SQLAlchemy (SQLite/PostgreSQL)
-- **Frontend**: Bootstrap 5, HTML5, CSS3, JavaScript
-- **Charts**: Plotly.js
-- **APIs**: Yahoo Finance, FRED, OpenAI
-- **Email**: Flask-Mail
+### Backend
+- **Python 3.8+**
+- **Flask** - Web framework
+- **SQLAlchemy** - Database ORM
+- **Flask-Login** - User session management
+- **Flask-Mail** - Email functionality
+- **pandas** - Data analysis
+- **NumPy** - Numerical computing
+- **scikit-learn** - Machine learning utilities
 
-## Installation
+### APIs & Data Sources
+- **Yahoo Finance** (`yfinance`) - Stock market data
+- **FRED API** (`fredapi`) - Economic indicators
+- **OpenAI API** - AI-powered market analysis
+- **Plotly** - Interactive charts and visualizations
+
+### Frontend
+- **Bootstrap 5** - UI framework
+- **Font Awesome** - Icon library
+- **JavaScript ES6** - Interactive functionality
+- **Chart.js/Plotly** - Data visualization
+
+### Database
+- **SQLite** (Development)
+- **PostgreSQL** (Production ready)
+
+## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.8 or higher
-- pip package manager
+```bash
+Python 3.8+
+pip (Python package manager)
+```
 
-### Setup
+### Installation
 
 1. **Clone the repository**
 ```bash
 git clone <repository-url>
-cd itrade-website
+cd itrade
 ```
 
-2. **Install dependencies**
+2. **Create virtual environment**
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+3. **Install dependencies**
 ```bash
 pip install -r requirements.txt
 ```
 
-3. **Configure environment variables**
+4. **Set up environment variables**
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` file with your API keys and configuration:
+Edit `.env` file with your API keys:
 ```env
-SECRET_KEY=your-super-secret-key-here
+SECRET_KEY=your-secret-key-here
 FRED_API_KEY=your-fred-api-key
 OPENAI_API_KEY=your-openai-api-key
 MAIL_USERNAME=your-email@gmail.com
 MAIL_PASSWORD=your-app-password
 ```
 
-4. **Initialize the database**
+5. **Initialize database**
 ```bash
 python app.py
 ```
 
-5. **Run the application**
-```bash
-python app.py
-```
+6. **Access the application**
+Open your browser and navigate to: `http://localhost:5000`
 
-Visit `http://localhost:5000` to access the application.
+## 🔑 API Keys Setup
 
-## API Keys Setup
-
-### Federal Reserve (FRED) API
+### FRED API Key (Free)
 1. Visit [FRED API](https://fred.stlouisfed.org/docs/api/api_key.html)
-2. Create a free account
-3. Generate an API key
-4. Add to your `.env` file
+2. Request a free API key
+3. Add to `.env` file
 
-### OpenAI API
-1. Visit [OpenAI Platform](https://platform.openai.com/api-keys)
-2. Create an account and generate an API key
-3. Add to your `.env` file
+### OpenAI API Key
+1. Visit [OpenAI Platform](https://platform.openai.com/)
+2. Create an account and get API key
+3. Add to `.env` file
 
-### Email Configuration (Gmail)
-1. Enable 2-factor authentication on your Gmail account
-2. Generate an App Password
-3. Use the app password in your `.env` file
+### Email Configuration (Optional)
+For password reset functionality:
+1. Use Gmail with App Password
+2. Configure SMTP settings in `.env`
 
-## Project Structure
+## 📱 Usage Guide
+
+### Getting Started
+1. **Register**: Create an account with email verification
+2. **Login**: Access your personal dashboard
+3. **Explore**: Navigate through market data and analysis tools
+
+### Trading Workflow
+1. **Search Stocks**: Use the search bar to find stocks
+2. **Analyze**: View detailed stock information and charts
+3. **Trade**: Execute buy/sell orders
+4. **Monitor**: Track your portfolio performance
+
+### Advanced Features
+1. **Market Analysis**: AI-powered comprehensive market insights
+2. **Correlation Analysis**: Analyze relationships between stocks
+3. **Portfolio Optimization**: Use correlation data for diversification
+
+## 🏗️ Architecture
 
 ```
-itrade-website/
+iTrade/
 ├── app.py                 # Main Flask application
 ├── requirements.txt       # Python dependencies
 ├── .env.example          # Environment variables template
-├── README.md             # Project documentation
-├── templates/            # Jinja2 templates
+├── templates/            # HTML templates
 │   ├── base.html         # Base template
-│   ├── index.html        # Landing page
-│   ├── login.html        # Login page
-│   ├── register.html     # Registration page
+│   ├── index.html        # Homepage
 │   ├── dashboard.html    # Trading dashboard
-│   ├── stock_detail.html # Stock information page
-│   ├── trade.html        # Trading interface
-│   └── portfolio.html    # Portfolio management
+│   ├── portfolio.html    # Portfolio management
+│   ├── correlation.html  # Correlation analysis
+│   └── market_analysis.html # AI market insights
 ├── static/               # Static assets
-│   ├── css/
-│   │   └── style.css     # Custom styles
-│   └── js/
-│       └── app.js        # JavaScript functionality
-└── instance/             # Instance-specific files
-    └── itrade.db         # SQLite database (created automatically)
+│   ├── css/             # Stylesheets
+│   └── js/              # JavaScript files
+└── instance/            # Database files
 ```
 
-## Key Features Explained
+## 🔧 Configuration
 
-### Real-time Market Data
-The application fetches live stock data using the Yahoo Finance API (`yfinance` library), providing:
-- Current stock prices
-- Historical price charts
-- Company information
-- Market statistics
+### Environment Variables
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `SECRET_KEY` | Flask secret key | Yes |
+| `DATABASE_URL` | Database connection string | Yes |
+| `FRED_API_KEY` | FRED economic data API key | No |
+| `OPENAI_API_KEY` | OpenAI API key for AI analysis | No |
+| `MAIL_USERNAME` | Email for password reset | No |
+| `MAIL_PASSWORD` | Email password/app password | No |
 
-### Economic Indicators
-Integration with the Federal Reserve's FRED API provides macroeconomic data:
-- Inflation rates (CPI)
-- Federal funds rate
-- Treasury bond yields
-- Housing market data
-- Employment statistics
+### Database Models
+- **User**: User accounts and authentication
+- **Trade**: Trading history and transactions
+- **Portfolio**: Position tracking and performance
 
-### AI Market Analysis
-OpenAI's GPT models analyze:
-- Sector performance trends
-- Market sentiment from news
-- Risk assessment
-- Trading recommendations
-
-### Simulated Trading
-Users can practice trading with:
-- Virtual $10,000 starting balance
-- Real-time price execution
-- Portfolio tracking
-- Performance analytics
-
-## Security Features
-
-- Password hashing with Werkzeug
-- CSRF protection with Flask-WTF
-- Session management
-- Email verification for password resets
-- SQL injection prevention with SQLAlchemy
-
-## Deployment
-
-### Local Development
-```bash
-python app.py
-```
+## 🚀 Deployment
 
 ### Production Deployment
-For production deployment, consider:
-- Using PostgreSQL instead of SQLite
-- Setting up a reverse proxy (nginx)
-- Using WSGI server (Gunicorn)
-- Implementing SSL/HTTPS
-- Setting up monitoring and logging
+1. **Use PostgreSQL database**
+```bash
+pip install psycopg2-binary
+```
 
-## API Endpoints
+2. **Update environment variables**
+```env
+DATABASE_URL=postgresql://user:password@localhost/itrade
+```
 
-- `/` - Landing page
-- `/login` - User authentication
-- `/register` - User registration
-- `/dashboard` - Main trading dashboard
-- `/stock/<symbol>` - Stock detail page
-- `/trade` - Trading interface
-- `/portfolio` - Portfolio management
-- `/api/stock_search` - Stock search API
+3. **Use production WSGI server**
+```bash
+gunicorn --bind 0.0.0.0:5000 app:app
+```
 
-## Contributing
+### Docker Deployment (Optional)
+```dockerfile
+FROM python:3.9-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+EXPOSE 5000
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+```
+
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -208,18 +229,38 @@ For production deployment, consider:
 4. Add tests if applicable
 5. Submit a pull request
 
-## License
+## 📄 License
 
-This project is for educational purposes. Please ensure compliance with all relevant financial regulations if adapting for real trading.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Disclaimer
+## 🛡️ Security
 
-**Important**: This is a demo trading platform for educational purposes only. No real money is involved, and no actual trades are executed. Always consult with financial professionals before making real investment decisions.
+- Passwords are hashed using Werkzeug security
+- CSRF protection with Flask-WTF
+- SQL injection protection with SQLAlchemy ORM
+- Session management with Flask-Login
 
-## Support
+## 📞 Support
 
-For questions or issues, please open an issue on the repository or contact the development team.
+For support and questions:
+- Open an issue on GitHub
+- Contact: [your-email@domain.com]
+
+## 🔄 Updates & Roadmap
+
+### Current Version: 1.0.0
+- Full trading platform functionality
+- AI-powered market analysis
+- Correlation analysis tools
+- Comprehensive portfolio management
+
+### Planned Features
+- Real-time notifications
+- Advanced charting tools
+- Social trading features
+- Mobile app development
+- Options trading support
 
 ---
 
-Built with ❤️ using Python Flask and modern web technologies.
+**Disclaimer**: This platform is for educational and demonstration purposes. Always consult with financial advisors before making investment decisions.

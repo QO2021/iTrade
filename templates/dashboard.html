@@ -34,9 +34,14 @@
                         <div id="search-results" class="mt-2"></div>
                     </div>
                     <div class="col-md-4 text-md-end">
-                        <a href="{{ url_for('trade') }}" class="btn btn-success btn-lg">
-                            <i class="fas fa-exchange-alt me-2"></i>Execute Trade
-                        </a>
+                        <div class="d-flex flex-column gap-2">
+                            <a href="{{ url_for('trade') }}" class="btn btn-success">
+                                <i class="fas fa-exchange-alt me-2"></i>Execute Trade
+                            </a>
+                            <a href="{{ url_for('market_analysis') }}" class="btn btn-info">
+                                <i class="fas fa-chart-area me-2"></i>Market Analysis
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

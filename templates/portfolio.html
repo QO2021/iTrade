@@ -22,7 +22,7 @@
                     <i class="fas fa-dollar-sign fa-2x"></i>
                 </div>
                 <h5 class="card-title">Total Value</h5>
-                <h3 class="text-success">$0.00</h3>
+                <h3 class="text-success">${{ "%.2f"|format(performance.total_value if performance.total_value else 0) }}</h3>
                 <small class="text-muted">Portfolio Value</small>
             </div>
         </div>
@@ -30,12 +30,16 @@
     <div class="col-lg-3 col-md-6">
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
-                <div class="text-primary mb-2">
+                <div class="{% if performance.total_gain_loss and performance.total_gain_loss >= 0 %}text-success{% else %}text-danger{% endif %} mb-2">
                     <i class="fas fa-chart-line fa-2x"></i>
                 </div>
-                <h5 class="card-title">Day Change</h5>
-                <h3 class="text-primary">$0.00</h3>
-                <small class="text-muted">0.00%</small>
+                <h5 class="card-title">Total P&L</h5>
+                <h3 class="{% if performance.total_gain_loss and performance.total_gain_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    ${{ "%.2f"|format(performance.total_gain_loss if performance.total_gain_loss else 0) }}
+                </h3>
+                <small class="text-muted {% if performance.total_gain_loss_pct and performance.total_gain_loss_pct >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    {{ "%.2f"|format(performance.total_gain_loss_pct if performance.total_gain_loss_pct else 0) }}%
+                </small>
             </div>
         </div>
     </div>
@@ -64,6 +68,66 @@
         </div>
     </div>
 </div>
+
+<!-- Current Positions Section -->
+{% if performance.positions %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Current Positions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Symbol</th>
+                                <th>Quantity</th>
+                                <th>Avg Cost</th>
+                                <th>Current Price</th>
+                                <th>Market Value</th>
+                                <th>Gain/Loss</th>
+                                <th>%</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for symbol, position in performance.positions.items() %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('stock_detail', symbol=symbol) }}" 
+                                       class="text-decoration-none fw-bold">
+                                        {{ symbol }}
+                                    </a>
+                                </td>
+                                <td>{{ position.quantity }}</td>
+                                <td>${{ "%.2f"|format(position.avg_cost) }}</td>
+                                <td>${{ "%.2f"|format(position.current_price) }}</td>
+                                <td>${{ "%.2f"|format(position.current_value) }}</td>
+                                <td class="{% if position.gain_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    ${{ "%.2f"|format(position.gain_loss) }}
+                                </td>
+                                <td class="{% if position.gain_loss_pct >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {{ "%.2f"|format(position.gain_loss_pct) }}%
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('trade') }}?symbol={{ symbol }}" class="btn btn-sm btn-outline-primary">
+                                        Trade
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <div class="row">
     <div class="col-12">

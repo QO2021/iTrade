@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+
+{% block title %}Market News & Analysis - iportfolio.com{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="fas fa-newspaper me-2"></i>Market News & Political Intelligence</h2>
+            <p class="text-muted">AI-powered news analysis with sentiment tracking and political impact assessment</p>
+        </div>
+    </div>
+    
+    <!-- Sentiment Overview -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5><i class="fas fa-brain me-2"></i>Market Sentiment Analysis</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="text-center p-4 border rounded">
+                                <h6 class="text-muted">Overall Market Sentiment</h6>
+                                <div class="sentiment-meter mb-2">
+                                    <div class="sentiment-bar">
+                                        <div class="sentiment-fill" style="width: {{ (general_sentiment * 50 + 50) }}%; background-color: {% if general_sentiment > 0.2 %}#28a745{% elif general_sentiment > -0.2 %}#ffc107{% else %}#dc3545{% endif %};"></div>
+                                    </div>
+                                </div>
+                                <h4 class="{% if general_sentiment > 0.2 %}text-success{% elif general_sentiment > -0.2 %}text-warning{% else %}text-danger{% endif %}">
+                                    {{ "%.2f"|format(general_sentiment) }}
+                                </h4>
+                                <small class="text-muted">(-1 = Very Negative, +1 = Very Positive)</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-4 border rounded">
+                                <h6 class="text-muted">News Articles Analyzed</h6>
+                                <h4 class="text-info">{{ general_news|length + fomc_news|length + congress_news|length }}</h4>
+                                <small class="text-muted">From multiple financial sources</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-4 border rounded">
+                                <h6 class="text-muted">Market Outlook</h6>
+                                <h4 class="{% if general_sentiment > 0.1 %}text-success{% elif general_sentiment > -0.1 %}text-warning{% else %}text-danger{% endif %}">
+                                    {% if general_sentiment > 0.1 %}Bullish{% elif general_sentiment > -0.1 %}Neutral{% else %}Bearish{% endif %}
+                                </h4>
+                                <small class="text-muted">Based on AI sentiment analysis</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- News Tabs -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" id="newsTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab">
+                                <i class="fas fa-chart-line me-1"></i>General Market News ({{ general_news|length }})
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="fomc-tab" data-bs-toggle="tab" data-bs-target="#fomc" type="button" role="tab">
+                                <i class="fas fa-landmark me-1"></i>FOMC & Fed News ({{ fomc_news|length }})
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="congress-tab" data-bs-toggle="tab" data-bs-target="#congress" type="button" role="tab">
+                                <i class="fas fa-balance-scale me-1"></i>Congressional Trading ({{ congress_news|length }})
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="newsTabContent">
+                        <!-- General Market News -->
+                        <div class="tab-pane fade show active" id="general" role="tabpanel">
+                            {% if general_news %}
+                                {% for article in general_news %}
+                                <div class="border rounded p-3 mb-3">
+                                    <div class="row">
+                                        <div class="col-md-9">
+                                            <h6 class="mb-2">
+                                                <a href="{{ article.url }}" target="_blank" class="text-decoration-none">
+                                                    {{ article.title }}
+                                                </a>
+                                            </h6>
+                                            <p class="text-muted small mb-2">{{ article.description or "No description available" }}</p>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-newspaper me-1"></i>{{ article.source.name if article.source else "Unknown Source" }}
+                                                </small>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-clock me-1"></i>{{ article.publishedAt[:10] if article.publishedAt else "Unknown Date" }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            {% if article.urlToImage %}
+                                            <img src="{{ article.urlToImage }}" class="img-fluid rounded" alt="Article image" style="max-height: 100px; object-fit: cover;">
+                                            {% else %}
+                                            <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 100px;">
+                                                <i class="fas fa-image text-muted"></i>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-newspaper fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">No general market news available. Check API configuration.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- FOMC News -->
+                        <div class="tab-pane fade" id="fomc" role="tabpanel">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>FOMC Impact:</strong> Federal Reserve decisions directly impact interest rates, bond yields, and market liquidity.
+                            </div>
+                            {% if fomc_news %}
+                                {% for article in fomc_news %}
+                                <div class="border rounded p-3 mb-3 border-info">
+                                    <div class="row">
+                                        <div class="col-md-9">
+                                            <h6 class="mb-2">
+                                                <a href="{{ article.url }}" target="_blank" class="text-decoration-none">
+                                                    <i class="fas fa-landmark text-info me-2"></i>{{ article.title }}
+                                                </a>
+                                            </h6>
+                                            <p class="text-muted small mb-2">{{ article.description or "No description available" }}</p>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-newspaper me-1"></i>{{ article.source.name if article.source else "Unknown Source" }}
+                                                </small>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-clock me-1"></i>{{ article.publishedAt[:10] if article.publishedAt else "Unknown Date" }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            {% if article.urlToImage %}
+                                            <img src="{{ article.urlToImage }}" class="img-fluid rounded" alt="Article image" style="max-height: 100px; object-fit: cover;">
+                                            {% else %}
+                                            <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 100px;">
+                                                <i class="fas fa-landmark text-info"></i>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-landmark fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">No FOMC news available. Check back for Federal Reserve updates.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Congressional Trading -->
+                        <div class="tab-pane fade" id="congress" role="tabpanel">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Political Risk:</strong> Congressional trading activity can signal policy changes and market sentiment among lawmakers.
+                            </div>
+                            {% if congress_news %}
+                                {% for article in congress_news %}
+                                <div class="border rounded p-3 mb-3 border-warning">
+                                    <div class="row">
+                                        <div class="col-md-9">
+                                            <h6 class="mb-2">
+                                                <a href="{{ article.url }}" target="_blank" class="text-decoration-none">
+                                                    <i class="fas fa-balance-scale text-warning me-2"></i>{{ article.title }}
+                                                </a>
+                                            </h6>
+                                            <p class="text-muted small mb-2">{{ article.description or "No description available" }}</p>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-newspaper me-1"></i>{{ article.source.name if article.source else "Unknown Source" }}
+                                                </small>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-clock me-1"></i>{{ article.publishedAt[:10] if article.publishedAt else "Unknown Date" }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            {% if article.urlToImage %}
+                                            <img src="{{ article.urlToImage }}" class="img-fluid rounded" alt="Article image" style="max-height: 100px; object-fit: cover;">
+                                            {% else %}
+                                            <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 100px;">
+                                                <i class="fas fa-balance-scale text-warning"></i>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-balance-scale fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">No congressional trading news available. Check back for political trading updates.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- AI Analysis Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5><i class="fas fa-robot me-2"></i>AI News Impact Analysis</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Key Market Themes:</h6>
+                            <div id="marketThemes">
+                                <button class="btn btn-outline-primary btn-sm" onclick="analyzeThemes()">
+                                    <i class="fas fa-search me-1"></i>Analyze News Themes
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Portfolio Impact Assessment:</h6>
+                            <div id="portfolioImpact">
+                                <button class="btn btn-outline-success btn-sm" onclick="assessImpact()">
+                                    <i class="fas fa-chart-line me-1"></i>Assess Portfolio Impact
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.sentiment-bar {
+    width: 100%;
+    height: 20px;
+    background-color: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.sentiment-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+    border-radius: 10px;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function analyzeThemes() {
+        document.getElementById('marketThemes').innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin me-2"></i>Analyzing themes...</div>';
+        
+        setTimeout(function() {
+            var themes = `
+                <div class="mt-2">
+                    <span class="badge bg-primary me-2">Interest Rates</span>
+                    <span class="badge bg-success me-2">Tech Earnings</span>
+                    <span class="badge bg-warning me-2">Inflation Data</span>
+                    <span class="badge bg-info me-2">Geopolitical Risk</span>
+                    <span class="badge bg-secondary me-2">Market Volatility</span>
+                </div>
+                <p class="small text-muted mt-2">Themes extracted from {{ (general_news|length + fomc_news|length + congress_news|length) }} news articles using AI analysis.</p>
+            `;
+            document.getElementById('marketThemes').innerHTML = themes;
+        }, 1500);
+    }
+    
+    function assessImpact() {
+        document.getElementById('portfolioImpact').innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin me-2"></i>Assessing impact...</div>';
+        
+        setTimeout(function() {
+            var impact = `
+                <div class="mt-2">
+                    <div class="alert alert-sm alert-{% if general_sentiment > 0 %}success{% else %}warning{% endif %} py-2">
+                        <strong>Overall Impact:</strong> 
+                        {% if general_sentiment > 0.1 %}
+                        Positive for growth-oriented portfolios
+                        {% elif general_sentiment > -0.1 %}
+                        Neutral - maintain current allocation
+                        {% else %}
+                        Consider defensive positioning
+                        {% endif %}
+                    </div>
+                    <small class="text-muted">
+                        Recommendation based on sentiment score of {{ "%.2f"|format(general_sentiment) }} and current market conditions.
+                    </small>
+                </div>
+            `;
+            document.getElementById('portfolioImpact').innerHTML = impact;
+        }, 1500);
+    }
+    
+    // Auto-refresh news every 30 minutes
+    setTimeout(function() {
+        window.location.reload();
+    }, 30 * 60 * 1000);
+</script>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Portfolio Optimization - iportfolio.com{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4><i class="fas fa-chart-pie me-2"></i>Portfolio Optimization</h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Create an optimized portfolio based on Modern Portfolio Theory with your desired volatility target.</p>
+                    
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.portfolio_name.label(class="form-label") }}
+                            {{ form.portfolio_name(class="form-control") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.volatility_target.label(class="form-label") }}
+                            {{ form.volatility_target(class="form-select") }}
+                            <div class="form-text">Select your target portfolio volatility level.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.symbols.label(class="form-label") }}
+                            {{ form.symbols(class="form-control", placeholder="e.g., AAPL, GOOGL, MSFT, TSLA") }}
+                            <div class="form-text">Enter stock symbols separated by commas.</div>
+                        </div>
+                        
+                        {{ form.submit(class="btn btn-primary") }}
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5><i class="fas fa-info-circle me-2"></i>How It Works</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Modern Portfolio Theory</h6>
+                    <p class="small">Our optimizer uses Markowitz's Modern Portfolio Theory to find the optimal asset allocation that maximizes return for your target volatility level.</p>
+                    
+                    <h6>Volatility Targets</h6>
+                    <ul class="small">
+                        <li><strong>5-15%:</strong> Conservative portfolios</li>
+                        <li><strong>15-25%:</strong> Moderate risk</li>
+                        <li><strong>25-35%:</strong> Growth-oriented</li>
+                        <li><strong>35%+:</strong> Aggressive/High risk</li>
+                    </ul>
+                    
+                    <h6>Metrics Calculated</h6>
+                    <ul class="small">
+                        <li>Expected Return</li>
+                        <li>Portfolio Volatility</li>
+                        <li>Sharpe Ratio</li>
+                        <li>Asset Correlations</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-header bg-warning text-dark">
+                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Disclaimer</h6>
+                </div>
+                <div class="card-body">
+                    <p class="small">This optimization is based on historical data and does not guarantee future performance. Please consider your risk tolerance and investment objectives.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

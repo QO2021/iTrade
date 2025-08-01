@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Optimization Results - {{ portfolio_name }} - iportfolio.com{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4><i class="fas fa-check-circle me-2"></i>Portfolio Optimization Complete: {{ portfolio_name }}</h4>
+                </div>
+                <div class="card-body">
+                    {% if result.success %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-thumbs-up me-2"></i>Optimization successful! Here are your optimized portfolio weights.
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Optimization used equal weights as fallback. Consider trying different parameters.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-pie me-2"></i>Portfolio Allocation</h5>
+                </div>
+                <div class="card-body">
+                    <div id="portfolioChart" style="height: 400px;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-calculator me-2"></i>Portfolio Metrics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="metric-item mb-3">
+                                <strong>Expected Return:</strong>
+                                <span class="float-end text-success">{{ "%.2f%%"|format(result.expected_return * 100) }}</span>
+                            </div>
+                            <div class="metric-item mb-3">
+                                <strong>Portfolio Volatility:</strong>
+                                <span class="float-end text-warning">{{ "%.2f%%"|format(result.volatility * 100) }}</span>
+                            </div>
+                            <div class="metric-item mb-3">
+                                <strong>Sharpe Ratio:</strong>
+                                <span class="float-end {% if result.sharpe_ratio > 1 %}text-success{% elif result.sharpe_ratio > 0.5 %}text-warning{% else %}text-danger{% endif %}">
+                                    {{ "%.3f"|format(result.sharpe_ratio) }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6><i class="fas fa-list me-2"></i>Asset Weights</h6>
+                </div>
+                <div class="card-body">
+                    {% for symbol, weight in result.weights.items() %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold">{{ symbol }}</span>
+                        <span class="badge bg-primary">{{ "%.2f%%"|format(weight * 100) }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-info-circle me-2"></i>Fama-French Analysis</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Based on the Fama-French model, here are some considerations for your portfolio:</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Turnover Recommendations:</h6>
+                            <ul>
+                                <li>Review portfolio allocation monthly</li>
+                                <li>Rebalance when weights drift >5% from target</li>
+                                <li>Consider transaction costs vs. rebalancing benefits</li>
+                                <li>Monitor factor exposures (size, value, profitability)</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Risk Considerations:</h6>
+                            <ul>
+                                <li>Diversification across sectors and market caps</li>
+                                <li>Monitor correlation changes during market stress</li>
+                                <li>Consider adding defensive assets during high volatility</li>
+                                <li>Regular stress testing of portfolio performance</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-3">
+        <div class="col-12 text-center">
+            <a href="{{ url_for('optimization') }}" class="btn btn-secondary me-2">
+                <i class="fas fa-arrow-left me-1"></i>Create Another Portfolio
+            </a>
+            <a href="{{ url_for('analytics') }}" class="btn btn-primary">
+                <i class="fas fa-chart-line me-1"></i>View Analytics
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Create portfolio allocation pie chart
+    var symbols = {{ symbols|tojson }};
+    var weights = [
+        {% for symbol in symbols %}
+        {{ result.weights[symbol] * 100 }},
+        {% endfor %}
+    ];
+    
+    var data = [{
+        values: weights,
+        labels: symbols,
+        type: 'pie',
+        textinfo: 'label+percent',
+        textposition: 'outside',
+        automargin: true
+    }];
+    
+    var layout = {
+        title: 'Portfolio Allocation',
+        showlegend: true,
+        margin: {t: 50, b: 50, l: 50, r: 50}
+    };
+    
+    Plotly.newPlot('portfolioChart', data, layout, {responsive: true});
+</script>
+{% endblock %}

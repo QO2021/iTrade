@@ -18,12 +18,18 @@ from fredapi import Fred
 from bs4 import BeautifulSoup
 import secrets
 from dotenv import load_dotenv
+import numpy as np
+import pandas as pd
+from scipy.optimize import minimize
+from sklearn.preprocessing import StandardScaler
+import pandas_datareader as pdr
+from newsapi import NewsApiClient
 
 load_dotenv()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///itrade.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///iportfolio.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Email configuration
@@ -36,6 +42,7 @@ app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 # API Keys
 FRED_API_KEY = os.environ.get('FRED_API_KEY')
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+NEWS_API_KEY = os.environ.get('NEWS_API_KEY')
 
 # Initialize extensions
 db = SQLAlchemy(app)
@@ -79,6 +86,35 @@ class Trade(db.Model):
     price = db.Column(db.Float, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
+# Portfolio model
+class Portfolio(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    volatility_target = db.Column(db.Float, nullable=False)  # Target volatility percentage
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+# Portfolio Holdings model
+class PortfolioHolding(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    portfolio_id = db.Column(db.Integer, db.ForeignKey('portfolio.id'), nullable=False)
+    symbol = db.Column(db.String(10), nullable=False)
+    weight = db.Column(db.Float, nullable=False)  # Percentage weight in portfolio
+    shares = db.Column(db.Integer, nullable=False)
+    last_updated = db.Column(db.DateTime, default=datetime.utcnow)
+
+# Market Analysis model
+class MarketAnalysis(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    symbol = db.Column(db.String(10), nullable=False)
+    analysis_date = db.Column(db.DateTime, default=datetime.utcnow)
+    sector_analysis = db.Column(db.Text)
+    news_sentiment = db.Column(db.Float)  # Sentiment score -1 to 1
+    volatility = db.Column(db.Float)
+    sharpe_ratio = db.Column(db.Float)
+    beta = db.Column(db.Float)
+    correlation_data = db.Column(db.Text)  # JSON string
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -112,6 +148,14 @@ class TradeForm(FlaskForm):
     action = SelectField('Action', choices=[('BUY', 'Buy'), ('SELL', 'Sell')], validators=[DataRequired()])
     quantity = StringField('Quantity', validators=[DataRequired()])
     submit = SubmitField('Execute Trade')
+
+class PortfolioOptimizationForm(FlaskForm):
+    portfolio_name = StringField('Portfolio Name', validators=[DataRequired(), Length(min=3, max=100)])
+    volatility_target = SelectField('Volatility Target', 
+                                  choices=[(i, f'{i}%') for i in range(5, 100, 10)], 
+                                  validators=[DataRequired()])
+    symbols = StringField('Stock Symbols (comma-separated)', validators=[DataRequired()])
+    submit = SubmitField('Optimize Portfolio')
 
 # Routes
 @app.route('/')
@@ -277,6 +321,138 @@ def portfolio():
     trades = Trade.query.filter_by(user_id=current_user.id).order_by(Trade.timestamp.desc()).all()
     return render_template('portfolio.html', trades=trades)
 
+@app.route('/optimization', methods=['GET', 'POST'])
+@login_required
+def optimization():
+    form = PortfolioOptimizationForm()
+    if form.validate_on_submit():
+        try:
+            symbols = [s.strip().upper() for s in form.symbols.data.split(',')]
+            target_volatility = int(form.volatility_target.data)
+            portfolio_name = form.portfolio_name.data
+            
+            # Get market data and optimize
+            market_data = get_market_data_for_symbols(symbols)
+            if market_data.empty:
+                flash('Error fetching market data for symbols', 'error')
+                return render_template('optimization.html', form=form)
+            
+            returns_data = calculate_returns(market_data)
+            optimization_result = optimize_portfolio(symbols, target_volatility, returns_data)
+            
+            # Save portfolio to database
+            portfolio = Portfolio(
+                user_id=current_user.id,
+                name=portfolio_name,
+                volatility_target=target_volatility
+            )
+            db.session.add(portfolio)
+            db.session.commit()
+            
+            # Save holdings
+            for symbol, weight in optimization_result['weights'].items():
+                holding = PortfolioHolding(
+                    portfolio_id=portfolio.id,
+                    symbol=symbol,
+                    weight=weight * 100,  # Store as percentage
+                    shares=0  # Would be calculated based on investment amount
+                )
+                db.session.add(holding)
+            
+            db.session.commit()
+            flash('Portfolio optimized successfully!', 'success')
+            return render_template('optimization_result.html', 
+                                 result=optimization_result, 
+                                 symbols=symbols,
+                                 portfolio_name=portfolio_name)
+        
+        except Exception as e:
+            flash(f'Error optimizing portfolio: {str(e)}', 'error')
+    
+    return render_template('optimization.html', form=form)
+
+@app.route('/analytics')
+@login_required
+def analytics():
+    # Get user's portfolios
+    portfolios = Portfolio.query.filter_by(user_id=current_user.id).all()
+    
+    # Get economic indicators
+    economic_data = get_economic_indicators_extended()
+    
+    # Get FF factors
+    ff_factors = get_fama_french_factors()
+    
+    # Sample stocks for correlation analysis
+    sample_symbols = ['AAPL', 'GOOGL', 'MSFT', 'TSLA', 'META']
+    correlation_data = analyze_correlation(sample_symbols)
+    
+    return render_template('analytics.html', 
+                         portfolios=portfolios,
+                         economic_data=economic_data,
+                         ff_factors=ff_factors,
+                         correlation_data=correlation_data,
+                         sample_symbols=sample_symbols)
+
+@app.route('/market_news')
+@login_required
+def market_news():
+    # Get financial news
+    general_news = get_financial_news("financial markets stock market", page_size=10)
+    fomc_news = get_financial_news("FOMC Federal Reserve meeting", page_size=5)
+    congress_news = get_financial_news("congress trading stocks", page_size=5)
+    
+    # Analyze sentiment
+    general_sentiment = analyze_news_sentiment(general_news)
+    
+    return render_template('market_news.html',
+                         general_news=general_news,
+                         fomc_news=fomc_news,
+                         congress_news=congress_news,
+                         general_sentiment=general_sentiment)
+
+@app.route('/api/stock_analysis/<symbol>')
+@login_required
+def stock_analysis_api(symbol):
+    try:
+        # Get stock data
+        stock = yf.Ticker(symbol.upper())
+        hist = stock.history(period="1y")
+        
+        if hist.empty:
+            return jsonify({'error': 'No data found for symbol'})
+        
+        # Calculate metrics
+        returns = calculate_returns(hist['Close'])
+        volatility = calculate_volatility(returns)
+        sharpe_ratio = calculate_sharpe_ratio(returns)
+        
+        # Get market data for beta calculation
+        market = yf.Ticker("^GSPC")  # S&P 500
+        market_hist = market.history(period="1y")
+        market_returns = calculate_returns(market_hist['Close'])
+        
+        # Align dates
+        aligned_data = pd.concat([returns, market_returns], axis=1, join='inner')
+        if not aligned_data.empty:
+            beta = calculate_beta(aligned_data.iloc[:, 0], aligned_data.iloc[:, 1])
+            capm_return = calculate_capm(beta)
+        else:
+            beta = 1.0
+            capm_return = 0.08
+        
+        return jsonify({
+            'symbol': symbol.upper(),
+            'volatility': float(volatility),
+            'sharpe_ratio': float(sharpe_ratio),
+            'beta': float(beta),
+            'camp_return': float(capm_return),
+            'current_price': float(hist['Close'].iloc[-1])
+        })
+    
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
 @app.route('/api/stock_search')
 @login_required
 def stock_search():
@@ -298,7 +474,7 @@ def stock_search():
 def send_reset_email(email, token):
     try:
         msg = Message(
-            'Password Reset - iTrade.com',
+            'Password Reset - iportfolio.com',
             sender=app.config['MAIL_USERNAME'],
             recipients=[email]
         )
@@ -366,6 +542,226 @@ def get_sector_analysis(sector):
     except Exception as e:
         print(f"Error getting sector analysis: {e}")
         return "Sector analysis temporarily unavailable"
+
+# Advanced Financial Calculations
+def calculate_returns(prices):
+    """Calculate returns from price series"""
+    return prices.pct_change().dropna()
+
+def calculate_volatility(returns, periods=252):
+    """Calculate annualized volatility"""
+    return returns.std() * np.sqrt(periods)
+
+def calculate_sharpe_ratio(returns, risk_free_rate=0.02, periods=252):
+    """Calculate Sharpe ratio"""
+    excess_returns = returns - risk_free_rate/periods
+    return (excess_returns.mean() * periods) / (returns.std() * np.sqrt(periods))
+
+def calculate_beta(stock_returns, market_returns):
+    """Calculate beta coefficient"""
+    covariance = np.cov(stock_returns, market_returns)[0][1]
+    market_variance = np.var(market_returns)
+    return covariance / market_variance if market_variance != 0 else 0
+
+def calculate_capm(beta, risk_free_rate=0.02, market_return=0.10):
+    """Calculate expected return using CAPM"""
+    return risk_free_rate + beta * (market_return - risk_free_rate)
+
+def get_fama_french_factors():
+    """Get Fama-French factors from FRED or other sources"""
+    try:
+        if fred:
+            # Get market risk premium (simplified)
+            end_date = datetime.now()
+            start_date = end_date - timedelta(days=365*5)
+            
+            # Simplified factors - in real implementation, use proper FF data
+            return {
+                'market_premium': 0.06,
+                'smb': 0.02,  # Small minus Big
+                'hml': 0.03,  # High minus Low
+                'rmw': 0.01,  # Robust minus Weak
+                'cma': 0.01   # Conservative minus Aggressive
+            }
+    except Exception as e:
+        print(f"Error fetching FF factors: {e}")
+    
+    return {
+        'market_premium': 0.06,
+        'smb': 0.02,
+        'hml': 0.03,
+        'rmw': 0.01,
+        'cma': 0.01
+    }
+
+def optimize_portfolio(symbols, target_volatility, returns_data):
+    """Optimize portfolio using Modern Portfolio Theory"""
+    try:
+        # Calculate expected returns and covariance matrix
+        expected_returns = returns_data.mean() * 252
+        cov_matrix = returns_data.cov() * 252
+        
+        n_assets = len(symbols)
+        
+        def portfolio_volatility(weights):
+            return np.sqrt(np.dot(weights, np.dot(cov_matrix, weights)))
+        
+        def portfolio_return(weights):
+            return np.sum(expected_returns * weights)
+        
+        # Constraints
+        constraints = [
+            {'type': 'eq', 'fun': lambda x: np.sum(x) - 1},  # weights sum to 1
+            {'type': 'eq', 'fun': lambda x: portfolio_volatility(x) - target_volatility/100}  # target volatility
+        ]
+        
+        # Bounds
+        bounds = tuple((0, 1) for _ in range(n_assets))
+        
+        # Initial guess
+        x0 = np.array([1/n_assets] * n_assets)
+        
+        # Maximize return for given volatility
+        result = minimize(
+            lambda x: -portfolio_return(x),
+            x0,
+            method='SLSQP',
+            bounds=bounds,
+            constraints=constraints
+        )
+        
+        if result.success:
+            weights = result.x
+            expected_return = portfolio_return(weights)
+            volatility = portfolio_volatility(weights)
+            sharpe = (expected_return - 0.02) / volatility
+            
+            return {
+                'weights': dict(zip(symbols, weights)),
+                'expected_return': expected_return,
+                'volatility': volatility,
+                'sharpe_ratio': sharpe,
+                'success': True
+            }
+    except Exception as e:
+        print(f"Error optimizing portfolio: {e}")
+    
+    # Fallback to equal weights
+    equal_weight = 1.0 / len(symbols)
+    return {
+        'weights': {symbol: equal_weight for symbol in symbols},
+        'expected_return': 0.08,
+        'volatility': target_volatility/100,
+        'sharpe_ratio': 0.4,
+        'success': False
+    }
+
+def get_market_data_for_symbols(symbols, period='1y'):
+    """Get historical market data for multiple symbols"""
+    try:
+        data = yf.download(symbols, period=period)
+        if len(symbols) == 1:
+            return data['Adj Close'].to_frame(symbols[0])
+        else:
+            return data['Adj Close']
+    except Exception as e:
+        print(f"Error fetching market data: {e}")
+        return pd.DataFrame()
+
+def analyze_correlation(symbols, period='1y'):
+    """Calculate correlation matrix between symbols"""
+    try:
+        data = get_market_data_for_symbols(symbols, period)
+        returns = calculate_returns(data)
+        correlation_matrix = returns.corr()
+        return correlation_matrix.to_dict()
+    except Exception as e:
+        print(f"Error calculating correlation: {e}")
+        return {}
+
+def get_financial_news(query="financial markets", language='en', page_size=10):
+    """Get financial news using News API"""
+    if not NEWS_API_KEY:
+        return []
+    
+    try:
+        newsapi = NewsApiClient(api_key=NEWS_API_KEY)
+        articles = newsapi.get_everything(
+            q=query,
+            language=language,
+            sort_by='publishedAt',
+            page_size=page_size
+        )
+        return articles.get('articles', [])
+    except Exception as e:
+        print(f"Error fetching news: {e}")
+        return []
+
+def analyze_news_sentiment(articles):
+    """Analyze sentiment of news articles using OpenAI"""
+    if not OPENAI_API_KEY or not articles:
+        return 0.0
+    
+    try:
+        from openai import OpenAI
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        
+        # Combine article titles and descriptions
+        text_to_analyze = " ".join([
+            f"{article.get('title', '')} {article.get('description', '')}"
+            for article in articles[:5]  # Analyze first 5 articles
+        ])
+        
+        prompt = f"""Analyze the sentiment of the following financial news text and return a score between -1 (very negative) and 1 (very positive):
+
+{text_to_analyze}
+
+Return only a numerical score between -1 and 1."""
+        
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a financial sentiment analyst. Return only numerical scores."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=10,
+            temperature=0.3
+        )
+        
+        try:
+            sentiment_score = float(response.choices[0].message.content.strip())
+            return max(-1, min(1, sentiment_score))  # Clamp between -1 and 1
+        except ValueError:
+            return 0.0
+    except Exception as e:
+        print(f"Error analyzing sentiment: {e}")
+        return 0.0
+
+def get_economic_indicators_extended():
+    """Get extended economic indicators including VIX, oil, gold"""
+    indicators = get_economic_indicators()
+    
+    try:
+        # Get VIX, oil, and gold prices
+        vix = yf.Ticker("^VIX")
+        oil = yf.Ticker("CL=F")  # Crude Oil Futures
+        gold = yf.Ticker("GC=F")  # Gold Futures
+        
+        vix_data = vix.history(period="5d")
+        oil_data = oil.history(period="5d")
+        gold_data = gold.history(period="5d")
+        
+        if not vix_data.empty:
+            indicators['vix'] = vix_data['Close'].iloc[-1]
+        if not oil_data.empty:
+            indicators['oil_price'] = oil_data['Close'].iloc[-1]
+        if not gold_data.empty:
+            indicators['gold_price'] = gold_data['Close'].iloc[-1]
+            
+    except Exception as e:
+        print(f"Error fetching additional indicators: {e}")
+    
+    return indicators
 
 if __name__ == '__main__':
     with app.app_context():

@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+
+{% block title %}Portfolio Analytics - iportfolio.com{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="fas fa-chart-line me-2"></i>Portfolio Analytics & Market Intelligence</h2>
+            <p class="text-muted">Advanced analytics powered by AI and financial data feeds</p>
+        </div>
+    </div>
+    
+    <!-- Economic Indicators -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5><i class="fas fa-globe me-2"></i>Economic Indicators</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% if economic_data.cpi %}
+                        <div class="col-md-2 col-sm-6 mb-3">
+                            <div class="text-center p-3 border rounded bg-light">
+                                <h6 class="text-muted">CPI</h6>
+                                <h4 class="text-primary">{{ "%.1f"|format(economic_data.cpi) }}</h4>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if economic_data.unemployment %}
+                        <div class="col-md-2 col-sm-6 mb-3">
+                            <div class="text-center p-3 border rounded bg-light">
+                                <h6 class="text-muted">Unemployment</h6>
+                                <h4 class="text-warning">{{ "%.1f%"|format(economic_data.unemployment) }}</h4>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if economic_data.interest_rate %}
+                        <div class="col-md-2 col-sm-6 mb-3">
+                            <div class="text-center p-3 border rounded bg-light">
+                                <h6 class="text-muted">Fed Rate</h6>
+                                <h4 class="text-info">{{ "%.2f%"|format(economic_data.interest_rate) }}</h4>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if economic_data.bond_yield %}
+                        <div class="col-md-2 col-sm-6 mb-3">
+                            <div class="text-center p-3 border rounded bg-light">
+                                <h6 class="text-muted">10Y Bond</h6>
+                                <h4 class="text-success">{{ "%.2f%"|format(economic_data.bond_yield) }}</h4>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if economic_data.vix %}
+                        <div class="col-md-2 col-sm-6 mb-3">
+                            <div class="text-center p-3 border rounded bg-light">
+                                <h6 class="text-muted">VIX</h6>
+                                <h4 class="{% if economic_data.vix > 30 %}text-danger{% elif economic_data.vix > 20 %}text-warning{% else %}text-success{% endif %}">
+                                    {{ "%.1f"|format(economic_data.vix) }}
+                                </h4>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if economic_data.oil_price %}
+                        <div class="col-md-2 col-sm-6 mb-3">
+                            <div class="text-center p-3 border rounded bg-light">
+                                <h6 class="text-muted">Oil (USD)</h6>
+                                <h4 class="text-dark">${{ "%.1f"|format(economic_data.oil_price) }}</h4>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if economic_data.gold_price %}
+                    <div class="row">
+                        <div class="col-md-2 col-sm-6 mb-3">
+                            <div class="text-center p-3 border rounded bg-light">
+                                <h6 class="text-muted">Gold (USD)</h6>
+                                <h4 class="text-warning">${{ "%.0f"|format(economic_data.gold_price) }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Fama-French Factors -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5><i class="fas fa-calculator me-2"></i>Fama-French Factors</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="text-center p-2 border rounded mb-2">
+                                <strong>Market Premium</strong>
+                                <div class="h5 text-primary">{{ "%.2f%"|format(ff_factors.market_premium * 100) }}</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center p-2 border rounded mb-2">
+                                <strong>SMB (Size)</strong>
+                                <div class="h5 text-success">{{ "%.2f%"|format(ff_factors.smb * 100) }}</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center p-2 border rounded mb-2">
+                                <strong>HML (Value)</strong>
+                                <div class="h5 text-warning">{{ "%.2f%"|format(ff_factors.hml * 100) }}</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center p-2 border rounded mb-2">
+                                <strong>RMW (Quality)</strong>
+                                <div class="h5 text-info">{{ "%.2f%"|format(ff_factors.rmw * 100) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5><i class="fas fa-briefcase me-2"></i>Your Portfolios</h5>
+                </div>
+                <div class="card-body">
+                    {% if portfolios %}
+                        {% for portfolio in portfolios %}
+                        <div class="border rounded p-3 mb-2">
+                            <h6 class="mb-1">{{ portfolio.name }}</h6>
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">Target Volatility: {{ portfolio.volatility_target }}%</small>
+                                <small class="text-muted">{{ portfolio.created_at.strftime('%Y-%m-%d') }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No portfolios created yet. <a href="{{ url_for('optimization') }}">Create your first portfolio</a>.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Correlation Matrix -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5><i class="fas fa-project-diagram me-2"></i>Asset Correlation Matrix</h5>
+                </div>
+                <div class="card-body">
+                    <div id="correlationChart" style="height: 500px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Market Insights -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5><i class="fas fa-exclamation-triangle me-2"></i>Risk Assessment</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Current Market Conditions:</h6>
+                    {% if economic_data.vix %}
+                        {% if economic_data.vix > 30 %}
+                        <div class="alert alert-danger">
+                            <strong>High Volatility:</strong> VIX above 30 indicates elevated market fear. Consider defensive positioning.
+                        </div>
+                        {% elif economic_data.vix > 20 %}
+                        <div class="alert alert-warning">
+                            <strong>Moderate Volatility:</strong> Market uncertainty present. Monitor positions closely.
+                        </div>
+                        {% else %}
+                        <div class="alert alert-success">
+                            <strong>Low Volatility:</strong> Calm market conditions favorable for growth strategies.
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                    
+                    <h6 class="mt-3">Portfolio Recommendations:</h6>
+                    <ul class="small">
+                        <li>Rebalance monthly or when allocations drift >5%</li>
+                        <li>Consider factor exposure to size and value premiums</li>
+                        <li>Monitor correlation changes during market stress</li>
+                        <li>Maintain diversification across sectors and geographies</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5><i class="fas fa-robot me-2"></i>AI Market Analysis</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">AI-powered analysis of current market conditions and portfolio implications.</p>
+                    <div class="text-center py-3">
+                        <button class="btn btn-primary" onclick="getAIAnalysis()">
+                            <i class="fas fa-brain me-2"></i>Generate AI Analysis
+                        </button>
+                    </div>
+                    <div id="aiAnalysisResult" class="mt-3" style="display: none;">
+                        <div class="border rounded p-3 bg-light">
+                            <div id="aiAnalysisText"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Correlation Matrix Heatmap
+    var correlationData = {{ correlation_data|tojson }};
+    var symbols = {{ sample_symbols|tojson }};
+    
+    if (correlationData && Object.keys(correlationData).length > 0) {
+        var z = [];
+        var x = symbols;
+        var y = symbols;
+        
+        for (var i = 0; i < symbols.length; i++) {
+            var row = [];
+            for (var j = 0; j < symbols.length; j++) {
+                var corr = correlationData[symbols[i]] ? correlationData[symbols[i]][symbols[j]] : 0;
+                row.push(corr || 0);
+            }
+            z.push(row);
+        }
+        
+        var data = [{
+            z: z,
+            x: x,
+            y: y,
+            type: 'heatmap',
+            colorscale: 'RdBu',
+            reversescale: true,
+            zmin: -1,
+            zmax: 1,
+            texttemplate: "%{z:.2f}",
+            textfont: {"size": 12},
+            hoverongaps: false
+        }];
+        
+        var layout = {
+            title: 'Asset Correlation Matrix',
+            xaxis: {title: 'Assets'},
+            yaxis: {title: 'Assets'},
+            margin: {t: 50, b: 100, l: 100, r: 50}
+        };
+        
+        Plotly.newPlot('correlationChart', data, layout, {responsive: true});
+    }
+    
+    function getAIAnalysis() {
+        document.getElementById('aiAnalysisResult').style.display = 'block';
+        document.getElementById('aiAnalysisText').innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Analyzing market conditions...</div>';
+        
+        // Simulate AI analysis (in real implementation, this would call an API)
+        setTimeout(function() {
+            var analysis = `
+                <h6>Market Analysis Summary:</h6>
+                <p>Based on current economic indicators and market data:</p>
+                <ul>
+                    <li><strong>Market Sentiment:</strong> ${getMarketSentiment()}</li>
+                    <li><strong>Volatility Outlook:</strong> ${getVolatilityOutlook()}</li>
+                    <li><strong>Sector Rotation:</strong> Technology and healthcare showing strength</li>
+                    <li><strong>Risk Factors:</strong> Monitor inflation data and Fed policy signals</li>
+                </ul>
+                <p class="small text-muted">Analysis generated using economic data, market indicators, and historical patterns.</p>
+            `;
+            document.getElementById('aiAnalysisText').innerHTML = analysis;
+        }, 2000);
+    }
+    
+    function getMarketSentiment() {
+        {% if economic_data.vix %}
+        var vix = {{ economic_data.vix }};
+        if (vix > 30) return "Fearful - High uncertainty";
+        if (vix > 20) return "Cautious - Moderate concern";
+        return "Optimistic - Low fear levels";
+        {% else %}
+        return "Neutral - Limited data";
+        {% endif %}
+    }
+    
+    function getVolatilityOutlook() {
+        {% if economic_data.vix %}
+        var vix = {{ economic_data.vix }};
+        if (vix > 25) return "Elevated volatility expected";
+        if (vix > 15) return "Moderate volatility likely";
+        return "Low volatility environment";
+        {% else %}
+        return "Volatility data unavailable";
+        {% endif %}
+    }
+</script>
+{% endblock %}

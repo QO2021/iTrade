@@ -13,3 +13,10 @@ openai==1.51.2
 beautifulsoup4==4.12.3
 plotly==5.18.0
 gunicorn==21.2.0
+numpy==1.24.3
+pandas==2.0.3
+scipy==1.11.1
+scikit-learn==1.3.0
+pandas-datareader==0.10.0
+newsapi-python==0.2.6
+python-quandl==0.5.3

@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Create Portfolio - iPortfolio.com{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Create New Portfolio</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Portfolio Optimization:</strong> Our AI-powered system will automatically optimize your portfolio allocation based on your selected volatility target, using Modern Portfolio Theory and risk-return optimization.
+                    </div>
+
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.name.label(class="form-label") }}
+                            {{ form.name(class="form-control") }}
+                            {% if form.name.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.name.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.target_volatility.label(class="form-label") }}
+                            {{ form.target_volatility(class="form-select") }}
+                            {% if form.target_volatility.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.target_volatility.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <small class="text-muted">
+                                    <strong>Risk Guide:</strong><br>
+                                    • 5-15%: Conservative (bonds, dividend stocks)<br>
+                                    • 25-35%: Moderate (balanced mix)<br>
+                                    • 45-65%: Aggressive (growth stocks)<br>
+                                    • 75-95%: Speculative (high-growth, volatile assets)
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.symbols.label(class="form-label") }}
+                            {{ form.symbols(class="form-control", placeholder="e.g., AAPL, GOOGL, MSFT, TSLA, AMZN") }}
+                            {% if form.symbols.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.symbols.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <small class="text-muted">Enter stock symbols separated by commas. We recommend 3-10 stocks for optimal diversification.</small>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title"><i class="fas fa-calculator text-primary"></i> What We Calculate:</h6>
+                                        <ul class="list-unstyled mb-0">
+                                            <li><i class="fas fa-check text-success me-2"></i>Optimal allocation weights</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>Sharpe ratio maximization</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>Risk-adjusted returns</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>Correlation analysis</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title"><i class="fas fa-shield-alt text-warning"></i> Risk Considerations:</h6>
+                                        <ul class="list-unstyled mb-0">
+                                            <li><i class="fas fa-exclamation-triangle text-warning me-2"></i>Past performance ≠ future results</li>
+                                            <li><i class="fas fa-exclamation-triangle text-warning me-2"></i>Market volatility can exceed targets</li>
+                                            <li><i class="fas fa-exclamation-triangle text-warning me-2"></i>Diversification reduces but doesn't eliminate risk</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            {{ form.submit(class="btn btn-primary btn-lg") }}
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add some interactivity for better UX
+    const volatilitySelect = document.querySelector('#target_volatility');
+    const symbolsInput = document.querySelector('#symbols');
+    
+    // Popular stock suggestions
+    const stockSuggestions = [
+        'Technology: AAPL, GOOGL, MSFT, NVDA, AMD',
+        'Healthcare: JNJ, PFE, UNH, ABBV, TMO',
+        'Financial: JPM, BAC, WFC, GS, MS',
+        'Consumer: AMZN, WMT, HD, MCD, NKE',
+        'Energy: XOM, CVX, COP, EOG, SLB'
+    ];
+    
+    // Add tooltip or suggestion helper
+    symbolsInput.addEventListener('focus', function() {
+        if (!this.value) {
+            this.placeholder = 'Popular: AAPL, GOOGL, MSFT, AMZN, TSLA...';
+        }
+    });
+});
+</script>
+{% endblock %}

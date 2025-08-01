@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}{{ portfolio.name }} - iPortfolio.com{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Portfolio Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-briefcase text-primary me-2"></i>{{ portfolio.name }}</h2>
+            <p class="text-muted">Target Volatility: {{ "%.1f"|format(portfolio.target_volatility) }}% | Created: {{ portfolio.created_at.strftime('%B %d, %Y') }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Dashboard
+                </a>
+                <button class="btn btn-primary" onclick="rebalancePortfolio()">
+                    <i class="fas fa-balance-scale me-1"></i>Rebalance
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Portfolio Metrics -->
+    {% if metrics %}
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">{{ "%.2f"|format(metrics.annual_return) }}%</h5>
+                    <p class="card-text">Annual Return</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-info">{{ "%.2f"|format(metrics.volatility) }}%</h5>
+                    <p class="card-text">Volatility</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-success">{{ "%.3f"|format(metrics.sharpe_ratio) }}</h5>
+                    <p class="card-text">Sharpe Ratio</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-danger">{{ "%.2f"|format(metrics.max_drawdown) }}%</h5>
+                    <p class="card-text">Max Drawdown</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Portfolio Value -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4 class="card-title">Portfolio Value</h4>
+                            <h2 class="text-success">${{ "{:,.2f}".format(total_value) }}</h2>
+                            <p class="text-muted">Total invested value</p>
+                        </div>
+                        <div class="col-md-6">
+                            <div id="allocationChart" style="height: 300px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Holdings Table -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>Holdings</h5>
+                    <span class="badge bg-primary">{{ holdings|length }} Assets</span>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Company</th>
+                                    <th>Allocation</th>
+                                    <th>Shares</th>
+                                    <th>Price</th>
+                                    <th>Value</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for holding in holdings %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ url_for('stock_detail', symbol=holding.symbol) }}" class="text-decoration-none">
+                                            <strong>{{ holding.symbol }}</strong>
+                                        </a>
+                                    </td>
+                                    <td>
+                                        {% if portfolio_data.get(holding.symbol) %}
+                                            {{ portfolio_data[holding.symbol].name }}
+                                        {% else %}
+                                            {{ holding.symbol }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress me-2" style="width: 100px; height: 20px;">
+                                                <div class="progress-bar" role="progressbar" 
+                                                     style="width: {{ holding.allocation_percentage }}%"
+                                                     aria-valuenow="{{ holding.allocation_percentage }}" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="100">
+                                                </div>
+                                            </div>
+                                            <span class="small">{{ "%.1f"|format(holding.allocation_percentage) }}%</span>
+                                        </div>
+                                    </td>
+                                    <td>{{ "%.2f"|format(holding.shares) if holding.shares else "0" }}</td>
+                                    <td>
+                                        {% if portfolio_data.get(holding.symbol) %}
+                                            ${{ "%.2f"|format(portfolio_data[holding.symbol].price) }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if portfolio_data.get(holding.symbol) %}
+                                            ${{ "{:,.2f}".format(portfolio_data[holding.symbol].value) }}
+                                        {% else %}
+                                            $0.00
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{{ url_for('trade') }}?symbol={{ holding.symbol }}" 
+                                               class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-plus"></i>
+                                            </a>
+                                            <a href="{{ url_for('stock_detail', symbol=holding.symbol) }}" 
+                                               class="btn btn-outline-info btn-sm">
+                                                <i class="fas fa-chart-line"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Allocation Pie Chart -->
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Create allocation pie chart
+    const allocationData = [{
+        values: [
+            {% for holding in holdings %}
+            {{ holding.allocation_percentage }}{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ],
+        labels: [
+            {% for holding in holdings %}
+            '{{ holding.symbol }}'{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ],
+        type: 'pie',
+        textinfo: 'label+percent',
+        textposition: 'outside',
+        automargin: true,
+        marker: {
+            colors: ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#20c997', '#fd7e14', '#e83e8c']
+        }
+    }];
+
+    const layout = {
+        title: {
+            text: 'Portfolio Allocation',
+            font: { size: 16 }
+        },
+        showlegend: false,
+        margin: { t: 40, b: 40, l: 40, r: 40 },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)'
+    };
+
+    Plotly.newPlot('allocationChart', allocationData, layout, {
+        responsive: true,
+        displayModeBar: false
+    });
+});
+
+function rebalancePortfolio() {
+    if (confirm('Are you sure you want to rebalance this portfolio? This will recalculate optimal allocations based on current market conditions.')) {
+        // In a real implementation, this would trigger a rebalancing API call
+        alert('Portfolio rebalancing functionality will be implemented in the full version.');
+    }
+}
+
+// Add tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+
+<style>
+.progress {
+    background-color: #e9ecef;
+}
+
+.card {
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+}
+
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+}
+</style>
+{% endblock %}

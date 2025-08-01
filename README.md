@@ -1,63 +1,86 @@
-# iTrade.com - Professional Stock Trading Platform
+# iPortfolio.com - AI-Powered Portfolio Management Platform
 
-A comprehensive stock trading website built with Python Flask, featuring real-time market data, AI-powered analysis, and modern web technologies.
+A comprehensive financial portfolio management website built with Python Flask, featuring advanced portfolio optimization, real-time market data, AI-powered analysis, and modern portfolio theory implementation.
 
-## Features
+## 🚀 Key Features
 
-### 🔐 User Authentication
-- User registration with email verification
-- Secure login/logout system
+### 🔐 User Authentication & Security
+- Secure user registration with email verification
 - Password reset functionality via email
 - Session management with Flask-Login
+- CSRF protection and SQL injection prevention
 
-### 📊 Market Data Integration
-- **Yahoo Finance API**: Real-time stock prices, charts, and company information
+### 📊 Advanced Portfolio Management
+- **Portfolio Optimization**: Modern Portfolio Theory implementation with volatility targeting
+- **Risk-Based Allocation**: Create portfolios with target volatility from 5% to 95%
+- **Sharpe Ratio Maximization**: Automatic optimization for risk-adjusted returns
+- **Correlation Analysis**: Cross-asset correlation calculations
+- **Rebalancing Tools**: Portfolio rebalancing recommendations
+
+### 🧮 Financial Calculations & Metrics
+- **CAPM (Capital Asset Pricing Model)**: Expected return calculations
+- **Sharpe Ratio**: Risk-adjusted performance metrics
+- **Beta Calculation**: Systematic risk measurement relative to market
+- **Volatility Analysis**: Historical and implied volatility calculations
+- **Maximum Drawdown**: Risk assessment metrics
+
+### 📈 Comprehensive Market Data
+- **Yahoo Finance Integration**: Real-time stock prices, charts, and company data
 - **Federal Reserve (FRED) API**: Economic indicators including:
   - Consumer Price Index (CPI)
-  - Interest rates
-  - Bond yields
-  - House prices
+  - Federal funds rate and bond yields
   - Unemployment rates
+  - House price index
+  - Industrial production
+  - Consumer sentiment
+- **Market Indices**: S&P 500, Dow Jones, NASDAQ, VIX tracking
+- **Commodities**: Gold, oil, and silver prices
 
-### 🤖 AI-Powered Analysis
-- OpenAI integration for sector analysis
-- Financial and political news sentiment analysis
-- Market trend predictions
-- Risk assessment for stock sectors
+### 🤖 AI-Powered Financial Analysis
+- **OpenAI Integration**: Advanced sector and market analysis
+- **News Sentiment Analysis**: Financial news impact assessment
+- **FOMC Meeting Analysis**: Federal Reserve policy impact evaluation
+- **Congressional Trading Data**: Insider trading activity monitoring
+- **Sector Correlation Analysis**: Cross-sector relationship evaluation
+- **Risk Assessment**: AI-powered portfolio risk evaluation
 
-### 💼 Trading Features
-- Simulated stock trading (buy/sell)
-- Portfolio management and tracking
-- Trade history and performance analytics
-- Real-time price charts with Plotly
+### 💼 Trading & Execution
+- Simulated stock trading (buy/sell orders)
+- Real-time price execution
+- Trade history and analytics
+- Portfolio performance tracking
+- Position sizing recommendations
 
 ### 🎨 Modern UI/UX
 - Responsive Bootstrap 5 design
-- Interactive charts and visualizations
-- Real-time market status updates
-- Mobile-friendly interface
+- Interactive Plotly charts and visualizations
+- Real-time market data updates
+- Mobile-optimized interface
+- Dark/light theme support
 
-## Technology Stack
+## 🛠 Technology Stack
 
-- **Backend**: Python Flask
-- **Database**: SQLAlchemy (SQLite/PostgreSQL)
+- **Backend**: Python Flask with SQLAlchemy ORM
+- **Database**: SQLite (development) / PostgreSQL (production)
 - **Frontend**: Bootstrap 5, HTML5, CSS3, JavaScript
-- **Charts**: Plotly.js
-- **APIs**: Yahoo Finance, FRED, OpenAI
-- **Email**: Flask-Mail
+- **Visualization**: Plotly.js for interactive charts
+- **Financial Analysis**: NumPy, Pandas, SciPy for calculations
+- **Portfolio Optimization**: CVXPY for convex optimization
+- **APIs**: Yahoo Finance, FRED, OpenAI, Alpha Vantage
+- **Email**: Flask-Mail for notifications
 
-## Installation
+## 📦 Installation
 
 ### Prerequisites
 - Python 3.8 or higher
 - pip package manager
 
-### Setup
+### Quick Setup
 
 1. **Clone the repository**
 ```bash
 git clone <repository-url>
-cd itrade-website
+cd iportfolio-website
 ```
 
 2. **Install dependencies**
@@ -70,111 +93,109 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Edit `.env` file with your API keys and configuration:
+Edit `.env` file with your API keys:
 ```env
-SECRET_KEY=your-super-secret-key-here
+SECRET_KEY=your-secret-key-here
 FRED_API_KEY=your-fred-api-key
 OPENAI_API_KEY=your-openai-api-key
+ALPHA_VANTAGE_API_KEY=your-alpha-vantage-api-key
 MAIL_USERNAME=your-email@gmail.com
 MAIL_PASSWORD=your-app-password
 ```
 
-4. **Initialize the database**
+4. **Run the application**
 ```bash
 python app.py
 ```
 
-5. **Run the application**
-```bash
-python app.py
+Visit `http://localhost:5000` to access iPortfolio.com
+
+## 🔑 API Keys Setup
+
+### Required APIs
+
+#### Federal Reserve (FRED) API - **Required**
+- Visit [FRED API](https://fred.stlouisfed.org/docs/api/api_key.html)
+- Create free account and generate API key
+- Used for economic indicators and market data
+
+#### OpenAI API - **Required for AI Analysis**
+- Visit [OpenAI Platform](https://platform.openai.com/api-keys)
+- Create account and generate API key
+- Used for financial news analysis and sector insights
+
+### Optional APIs
+
+#### Alpha Vantage API - **Optional**
+- Visit [Alpha Vantage](https://www.alphavantage.co/support/#api-key)
+- Free tier available for additional market data
+
+#### Email Configuration (Gmail) - **For Password Reset**
+- Enable 2-factor authentication
+- Generate App Password
+- Add credentials to `.env` file
+
+## 📁 Project Structure
+
+```
+iportfolio-website/
+├── app.py                     # Main Flask application with portfolio optimization
+├── requirements.txt           # Python dependencies
+├── .env.example              # Environment variables template
+├── README.md                 # Project documentation
+├── templates/                # Jinja2 templates
+│   ├── base.html            # Updated base template with new navigation
+│   ├── index.html           # Landing page
+│   ├── dashboard.html       # Portfolio dashboard with market overview
+│   ├── create_portfolio.html # Portfolio creation interface
+│   ├── portfolio_detail.html # Individual portfolio analysis
+│   ├── analysis.html        # Comprehensive market analysis
+│   ├── trades.html          # Enhanced trade history
+│   ├── stock_detail.html    # Stock analysis with financial metrics
+│   └── auth/                # Authentication templates
+├── static/                  # Static assets
+│   ├── css/style.css       # Custom styles
+│   └── js/app.js           # JavaScript functionality
+└── instance/               # Instance-specific files
+    └── iportfolio.db       # SQLite database
 ```
 
-Visit `http://localhost:5000` to access the application.
+## 🎯 Core Features Explained
 
-## API Keys Setup
+### Portfolio Optimization Engine
+- **Modern Portfolio Theory**: Implements Markowitz portfolio optimization
+- **Risk Targeting**: Create portfolios with specific volatility targets (5%-95%)
+- **Efficient Frontier**: Calculate optimal risk-return combinations
+- **Constraint Optimization**: Long-only positions with weight constraints
 
-### Federal Reserve (FRED) API
-1. Visit [FRED API](https://fred.stlouisfed.org/docs/api/api_key.html)
-2. Create a free account
-3. Generate an API key
-4. Add to your `.env` file
+### Financial Metrics & Analysis
+- **Sharpe Ratio**: Risk-adjusted return calculations
+- **Beta Calculation**: Systematic risk relative to market (S&P 500)
+- **CAPM Expected Returns**: Theoretical expected returns based on risk
+- **Correlation Matrix**: Cross-asset correlation analysis
+- **Volatility Modeling**: Historical and forward-looking volatility
 
-### OpenAI API
-1. Visit [OpenAI Platform](https://platform.openai.com/api-keys)
-2. Create an account and generate an API key
-3. Add to your `.env` file
+### AI-Powered Insights
+- **Sector Analysis**: Deep dive into sector performance and trends
+- **News Sentiment**: Real-time news impact on market sectors
+- **Economic Correlation**: Link between economic indicators and stock performance
+- **Risk Assessment**: AI-evaluated portfolio risk levels
 
-### Email Configuration (Gmail)
-1. Enable 2-factor authentication on your Gmail account
-2. Generate an App Password
-3. Use the app password in your `.env` file
+### Real-time Data Integration
+- **Market Data**: Live prices, volume, and market statistics
+- **Economic Indicators**: Fed rates, inflation, employment data
+- **Volatility Index (VIX)**: Market fear gauge
+- **Commodity Prices**: Gold, oil, and precious metals
 
-## Project Structure
+## 🔒 Security & Performance
 
-```
-itrade-website/
-├── app.py                 # Main Flask application
-├── requirements.txt       # Python dependencies
-├── .env.example          # Environment variables template
-├── README.md             # Project documentation
-├── templates/            # Jinja2 templates
-│   ├── base.html         # Base template
-│   ├── index.html        # Landing page
-│   ├── login.html        # Login page
-│   ├── register.html     # Registration page
-│   ├── dashboard.html    # Trading dashboard
-│   ├── stock_detail.html # Stock information page
-│   ├── trade.html        # Trading interface
-│   └── portfolio.html    # Portfolio management
-├── static/               # Static assets
-│   ├── css/
-│   │   └── style.css     # Custom styles
-│   └── js/
-│       └── app.js        # JavaScript functionality
-└── instance/             # Instance-specific files
-    └── itrade.db         # SQLite database (created automatically)
-```
+- **Password Hashing**: Werkzeug security for password protection
+- **CSRF Protection**: Flask-WTF form protection
+- **SQL Injection Prevention**: SQLAlchemy ORM queries
+- **Session Security**: Secure session management
+- **Input Validation**: Form validation and sanitization
 
-## Key Features Explained
-
-### Real-time Market Data
-The application fetches live stock data using the Yahoo Finance API (`yfinance` library), providing:
-- Current stock prices
-- Historical price charts
-- Company information
-- Market statistics
-
-### Economic Indicators
-Integration with the Federal Reserve's FRED API provides macroeconomic data:
-- Inflation rates (CPI)
-- Federal funds rate
-- Treasury bond yields
-- Housing market data
-- Employment statistics
-
-### AI Market Analysis
-OpenAI's GPT models analyze:
-- Sector performance trends
-- Market sentiment from news
-- Risk assessment
-- Trading recommendations
-
-### Simulated Trading
-Users can practice trading with:
-- Virtual $10,000 starting balance
-- Real-time price execution
-- Portfolio tracking
-- Performance analytics
-
-## Security Features
-
-- Password hashing with Werkzeug
-- CSRF protection with Flask-WTF
-- Session management
-- Email verification for password resets
-- SQL injection prevention with SQLAlchemy
-
-## Deployment
+## 🚀 Deployment Options
 
 ### Local Development
 ```bash
@@ -182,44 +203,98 @@ python app.py
 ```
 
 ### Production Deployment
-For production deployment, consider:
-- Using PostgreSQL instead of SQLite
-- Setting up a reverse proxy (nginx)
-- Using WSGI server (Gunicorn)
-- Implementing SSL/HTTPS
-- Setting up monitoring and logging
+```bash
+# Using Gunicorn WSGI server
+gunicorn -w 4 -b 0.0.0.0:5000 app:app
 
-## API Endpoints
+# Using Docker (create Dockerfile)
+docker build -t iportfolio .
+docker run -p 5000:5000 iportfolio
+```
 
+### Environment Variables for Production
+```env
+FLASK_ENV=production
+DATABASE_URL=postgresql://user:pass@localhost/iportfolio
+SECRET_KEY=generated-secure-key
+```
+
+## 📊 API Endpoints
+
+### Core Application
 - `/` - Landing page
-- `/login` - User authentication
-- `/register` - User registration
-- `/dashboard` - Main trading dashboard
-- `/stock/<symbol>` - Stock detail page
+- `/dashboard` - Portfolio dashboard
+- `/analysis` - Market analysis page
+
+### Portfolio Management
+- `/portfolio/create` - Create optimized portfolio
+- `/portfolio/<id>` - Portfolio details and metrics
 - `/trade` - Trading interface
-- `/portfolio` - Portfolio management
+- `/trades` - Trade history
+
+### Stock Analysis
+- `/stock/<symbol>` - Detailed stock analysis
 - `/api/stock_search` - Stock search API
 
-## Contributing
+### Authentication
+- `/login`, `/register`, `/logout` - User authentication
+- `/forgot_password`, `/reset_password/<token>` - Password reset
+
+## 🧪 Testing Portfolio Optimization
+
+### Example Portfolio Creation
+1. Navigate to "Create Portfolio"
+2. Choose target volatility (e.g., 25% for moderate risk)
+3. Enter stock symbols: `AAPL, GOOGL, MSFT, AMZN, TSLA`
+4. System calculates optimal weights for target volatility
+5. View portfolio metrics: Sharpe ratio, expected return, risk
+
+### Sample Calculations
+- **Conservative Portfolio (15% volatility)**: Higher allocation to stable stocks
+- **Aggressive Portfolio (65% volatility)**: Higher allocation to growth stocks
+- **Balanced Portfolio (35% volatility)**: Diversified allocation across sectors
+
+## 📈 Financial Models Implemented
+
+### Modern Portfolio Theory
+- **Mean-Variance Optimization**: Maximizes return for given risk level
+- **Efficient Frontier**: Optimal portfolios for each risk level
+- **Risk-Return Trade-off**: Mathematical optimization of portfolio weights
+
+### Capital Asset Pricing Model (CAPM)
+- **Expected Return**: Risk-free rate + Beta × Market risk premium
+- **Beta Calculation**: Covariance with market / Market variance
+- **Risk Assessment**: Systematic vs. unsystematic risk
+
+### Performance Metrics
+- **Sharpe Ratio**: (Return - Risk-free rate) / Volatility
+- **Maximum Drawdown**: Largest peak-to-trough decline
+- **Correlation Analysis**: Asset correlation matrix
+
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+2. Create feature branch: `git checkout -b feature/portfolio-optimization`
+3. Implement changes with tests
+4. Submit pull request with detailed description
 
-## License
+## 📄 License
 
-This project is for educational purposes. Please ensure compliance with all relevant financial regulations if adapting for real trading.
+Educational and demonstration purposes. Ensure compliance with financial regulations for commercial use.
 
-## Disclaimer
+## ⚠️ Important Disclaimer
 
-**Important**: This is a demo trading platform for educational purposes only. No real money is involved, and no actual trades are executed. Always consult with financial professionals before making real investment decisions.
+**Educational Use Only**: This platform is for learning portfolio management concepts. No real trading occurs. Consult financial professionals for actual investment decisions. Past performance does not guarantee future results.
 
-## Support
+## 🆘 Support & Documentation
 
-For questions or issues, please open an issue on the repository or contact the development team.
+- **Issues**: GitHub issues for bug reports
+- **Features**: Feature requests welcome
+- **Documentation**: Comprehensive inline code documentation
+- **API Reference**: RESTful API documentation available
 
 ---
 
-Built with ❤️ using Python Flask and modern web technologies.
+**Built with 🧠 Modern Portfolio Theory, 📊 Real-time Data, and 🤖 AI Analysis**
+
+*Empowering intelligent investment decisions through technology and quantitative finance.*

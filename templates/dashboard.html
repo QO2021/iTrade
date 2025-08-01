@@ -1,42 +1,134 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard - iTrade.com{% endblock %}
+{% block title %}Dashboard - iPortfolio.com{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>Trading Dashboard</h1>
-            <div class="text-muted">
-                <i class="fas fa-clock me-1"></i>
-                <span id="current-time"></span>
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1><i class="fas fa-tachometer-alt text-primary me-2"></i>Portfolio Dashboard</h1>
+        <p class="text-muted">Welcome back, {{ current_user.username }}! Monitor your investments and market conditions.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group" role="group">
+            <a href="{{ url_for('create_portfolio') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>New Portfolio
+            </a>
+            <a href="{{ url_for('trade') }}" class="btn btn-success">
+                <i class="fas fa-exchange-alt me-1"></i>Trade
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Market Overview -->
+{% if market_data %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-globe me-2"></i>Market Overview</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for index, data in market_data.items() %}
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-light text-center">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    {% if index == '^GSPC' %}S&P 500
+                                    {% elif index == '^DJI' %}Dow Jones
+                                    {% elif index == '^IXIC' %}NASDAQ
+                                    {% elif index == '^VIX' %}VIX
+                                    {% else %}{{ index }}
+                                    {% endif %}
+                                </h6>
+                                <h5 class="{% if data.change_pct > 0 %}text-success{% elif data.change_pct < 0 %}text-danger{% else %}text-muted{% endif %}">
+                                    {{ "%.2f"|format(data.price) }}
+                                </h5>
+                                <small class="{% if data.change_pct > 0 %}text-success{% elif data.change_pct < 0 %}text-danger{% else %}text-muted{% endif %}">
+                                    {% if data.change_pct > 0 %}+{% endif %}{{ "%.2f"|format(data.change_pct) }}%
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- User Portfolios -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-briefcase me-2"></i>Your Portfolios</h5>
+                <span class="badge bg-primary">{{ portfolios|length }} Portfolio{{ 's' if portfolios|length != 1 else '' }}</span>
+            </div>
+            <div class="card-body">
+                {% if portfolios %}
+                <div class="row">
+                    {% for portfolio in portfolios %}
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card h-100 portfolio-card">
+                            <div class="card-body">
+                                <h6 class="card-title">{{ portfolio.name }}</h6>
+                                <p class="card-text">
+                                    <small class="text-muted">Target Volatility: {{ "%.1f"|format(portfolio.target_volatility) }}%</small><br>
+                                    <small class="text-muted">Created: {{ portfolio.created_at.strftime('%m/%d/%Y') }}</small>
+                                </p>
+                                <div class="d-grid gap-2">
+                                    <a href="{{ url_for('portfolio_detail', portfolio_id=portfolio.id) }}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-eye me-1"></i>View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-briefcase fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No portfolios yet</h5>
+                    <p class="text-muted">Create your first optimized portfolio to get started</p>
+                    <a href="{{ url_for('create_portfolio') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Create Your First Portfolio
+                    </a>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
 
+<!-- Stock Search -->
 <div class="row mb-4">
-    <div class="col-12">
-        <div class="card border-0 shadow-sm">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-search me-2"></i>Stock Analysis</h5>
+            </div>
             <div class="card-body">
-                <h5 class="card-title mb-3">
-                    <i class="fas fa-search me-2"></i>Stock Search
-                </h5>
                 <div class="row">
                     <div class="col-md-8">
                         <div class="input-group">
-                            <input type="text" id="stock-search" class="form-control form-control-lg" 
-                                   placeholder="Search for stocks (e.g., AAPL, GOOGL, MSFT)">
+                            <input type="text" id="stock-search" class="form-control" 
+                                   placeholder="Search for stocks (e.g., AAPL, GOOGL, MSFT, TSLA)">
                             <button class="btn btn-primary" type="button" id="search-btn">
                                 <i class="fas fa-search"></i>
                             </button>
                         </div>
                         <div id="search-results" class="mt-2"></div>
                     </div>
-                    <div class="col-md-4 text-md-end">
-                        <a href="{{ url_for('trade') }}" class="btn btn-success btn-lg">
-                            <i class="fas fa-exchange-alt me-2"></i>Execute Trade
-                        </a>
+                    <div class="col-md-4">
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('analysis') }}" class="btn btn-info">
+                                <i class="fas fa-chart-area me-2"></i>Market Analysis
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -44,224 +136,275 @@
     </div>
 </div>
 
-<div class="row g-4 mb-4">
-    <div class="col-lg-3 col-md-6">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body text-center">
-                <div class="text-primary mb-2">
-                    <i class="fas fa-chart-line fa-2x"></i>
-                </div>
-                <h5 class="card-title">Market Status</h5>
-                <h3 class="text-success">OPEN</h3>
-                <small class="text-muted">US Markets</small>
+<!-- Economic Indicators -->
+{% if economic_data %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Key Economic Indicators</h5>
             </div>
-        </div>
-    </div>
-    <div class="col-lg-3 col-md-6">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body text-center">
-                <div class="text-info mb-2">
-                    <i class="fas fa-percentage fa-2x"></i>
-                </div>
-                <h5 class="card-title">Interest Rate</h5>
-                <h3 class="text-primary">5.25%</h3>
-                <small class="text-muted">Federal Funds Rate</small>
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-3 col-md-6">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body text-center">
-                <div class="text-warning mb-2">
-                    <i class="fas fa-chart-area fa-2x"></i>
-                </div>
-                <h5 class="card-title">10Y Treasury</h5>
-                <h3 class="text-warning">4.35%</h3>
-                <small class="text-muted">Bond Yield</small>
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-3 col-md-6">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body text-center">
-                <div class="text-danger mb-2">
-                    <i class="fas fa-users fa-2x"></i>
-                </div>
-                <h5 class="card-title">Unemployment</h5>
-                <h3 class="text-danger">3.7%</h3>
-                <small class="text-muted">Latest Rate</small>
-            </div>
-        </div>
-    </div>
-</div>
+            <div class="card-body">
+                <div class="row">
+                    {% if economic_data.cpi %}
+                    <div class="col-md-2 mb-3">
+                        <div class="text-center">
+                            <h6 class="text-muted">CPI</h6>
+                            <h5 class="text-primary">{{ "%.1f"|format(economic_data.cpi.current) }}</h5>
+                            {% if economic_data.cpi.change %}
+                            <small class="{% if economic_data.cpi.change > 0 %}text-danger{% else %}text-success{% endif %}">
+                                {{ "%.2f"|format(economic_data.cpi.change) }}
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
 
-<div class="row">
-    <div class="col-lg-8">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <h5 class="card-title mb-4">
-                    <i class="fas fa-fire me-2"></i>Trending Stocks
-                </h5>
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Symbol</th>
-                                <th>Company</th>
-                                <th>Price</th>
-                                <th>Change</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong>AAPL</strong></td>
-                                <td>Apple Inc.</td>
-                                <td>$182.50</td>
-                                <td class="text-success">+2.1%</td>
-                                <td>
-                                    <a href="{{ url_for('stock_detail', symbol='AAPL') }}" class="btn btn-sm btn-outline-primary">
-                                        View Details
-                                    </a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>MSFT</strong></td>
-                                <td>Microsoft Corp.</td>
-                                <td>$378.85</td>
-                                <td class="text-success">+1.8%</td>
-                                <td>
-                                    <a href="{{ url_for('stock_detail', symbol='MSFT') }}" class="btn btn-sm btn-outline-primary">
-                                        View Details
-                                    </a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>GOOGL</strong></td>
-                                <td>Alphabet Inc.</td>
-                                <td>$142.20</td>
-                                <td class="text-danger">-0.5%</td>
-                                <td>
-                                    <a href="{{ url_for('stock_detail', symbol='GOOGL') }}" class="btn btn-sm btn-outline-primary">
-                                        View Details
-                                    </a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>TSLA</strong></td>
-                                <td>Tesla Inc.</td>
-                                <td>$248.42</td>
-                                <td class="text-success">+3.2%</td>
-                                <td>
-                                    <a href="{{ url_for('stock_detail', symbol='TSLA') }}" class="btn btn-sm btn-outline-primary">
-                                        View Details
-                                    </a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>NVDA</strong></td>
-                                <td>NVIDIA Corp.</td>
-                                <td>$785.20</td>
-                                <td class="text-success">+4.1%</td>
-                                <td>
-                                    <a href="{{ url_for('stock_detail', symbol='NVDA') }}" class="btn btn-sm btn-outline-primary">
-                                        View Details
-                                    </a>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    {% if economic_data.unemployment %}
+                    <div class="col-md-2 mb-3">
+                        <div class="text-center">
+                            <h6 class="text-muted">Unemployment</h6>
+                            <h5 class="text-info">{{ "%.1f"|format(economic_data.unemployment.current) }}%</h5>
+                            {% if economic_data.unemployment.change %}
+                            <small class="{% if economic_data.unemployment.change > 0 %}text-danger{% else %}text-success{% endif %}">
+                                {{ "%.2f"|format(economic_data.unemployment.change) }}%
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if economic_data.interest_rate %}
+                    <div class="col-md-2 mb-3">
+                        <div class="text-center">
+                            <h6 class="text-muted">Fed Rate</h6>
+                            <h5 class="text-warning">{{ "%.2f"|format(economic_data.interest_rate.current) }}%</h5>
+                            {% if economic_data.interest_rate.change %}
+                            <small class="{% if economic_data.interest_rate.change > 0 %}text-danger{% else %}text-success{% endif %}">
+                                {{ "%.2f"|format(economic_data.interest_rate.change) }}%
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if economic_data.vix %}
+                    <div class="col-md-2 mb-3">
+                        <div class="text-center">
+                            <h6 class="text-muted">VIX</h6>
+                            <h5 class="text-danger">{{ "%.1f"|format(economic_data.vix.current) }}</h5>
+                            {% if economic_data.vix.previous %}
+                            <small class="{% if economic_data.vix.current > economic_data.vix.previous %}text-danger{% else %}text-success{% endif %}">
+                                {{ "%.1f"|format(economic_data.vix.current - economic_data.vix.previous) }}
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if economic_data.gold %}
+                    <div class="col-md-2 mb-3">
+                        <div class="text-center">
+                            <h6 class="text-muted">Gold</h6>
+                            <h5 class="text-warning">${{ "%.0f"|format(economic_data.gold.current) }}</h5>
+                            {% if economic_data.gold.previous %}
+                            <small class="{% if economic_data.gold.current > economic_data.gold.previous %}text-success{% else %}text-danger{% endif %}">
+                                ${{ "%.0f"|format(economic_data.gold.current - economic_data.gold.previous) }}
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if economic_data.oil %}
+                    <div class="col-md-2 mb-3">
+                        <div class="text-center">
+                            <h6 class="text-muted">Oil (WTI)</h6>
+                            <h5 class="text-dark">${{ "%.1f"|format(economic_data.oil.current) }}</h5>
+                            {% if economic_data.oil.previous %}
+                            <small class="{% if economic_data.oil.current > economic_data.oil.previous %}text-success{% else %}text-danger{% endif %}">
+                                ${{ "%.1f"|format(economic_data.oil.current - economic_data.oil.previous) }}
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-lg-4">
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-body">
-                <h5 class="card-title mb-3">
-                    <i class="fas fa-chart-pie me-2"></i>Your Portfolio
-                </h5>
-                <div class="text-center mb-3">
-                    <h3 class="text-success">$0.00</h3>
-                    <small class="text-muted">Total Value</small>
-                </div>
-                <div class="d-grid">
-                    <a href="{{ url_for('portfolio') }}" class="btn btn-outline-primary">
-                        <i class="fas fa-briefcase me-2"></i>View Portfolio
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('analysis') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-chart-line me-1"></i>View Full Analysis
                     </a>
                 </div>
             </div>
         </div>
-        
-        <div class="card border-0 shadow-sm">
+    </div>
+</div>
+{% endif %}
+
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+            </div>
             <div class="card-body">
-                <h5 class="card-title mb-3">
-                    <i class="fas fa-newspaper me-2"></i>Market News
-                </h5>
-                <div class="list-group list-group-flush">
-                    <div class="list-group-item border-0 px-0">
-                        <h6 class="mb-1">Federal Reserve Maintains Interest Rates</h6>
-                        <small class="text-muted">Fed keeps rates steady at 5.25-5.50%</small>
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="d-grid">
+                            <a href="{{ url_for('create_portfolio') }}" class="btn btn-primary">
+                                <i class="fas fa-plus mb-2"></i><br>
+                                Create Portfolio
+                            </a>
+                        </div>
                     </div>
-                    <div class="list-group-item border-0 px-0">
-                        <h6 class="mb-1">Tech Stocks Rally on AI Optimism</h6>
-                        <small class="text-muted">Major tech companies see gains</small>
+                    <div class="col-md-3">
+                        <div class="d-grid">
+                            <a href="{{ url_for('trade') }}" class="btn btn-success">
+                                <i class="fas fa-exchange-alt mb-2"></i><br>
+                                Execute Trade
+                            </a>
+                        </div>
                     </div>
-                    <div class="list-group-item border-0 px-0">
-                        <h6 class="mb-1">Energy Sector Shows Strength</h6>
-                        <small class="text-muted">Oil prices remain stable</small>
+                    <div class="col-md-3">
+                        <div class="d-grid">
+                            <a href="{{ url_for('analysis') }}" class="btn btn-info">
+                                <i class="fas fa-chart-area mb-2"></i><br>
+                                Market Analysis
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-grid">
+                            <a href="{{ url_for('trades') }}" class="btn btn-secondary">
+                                <i class="fas fa-history mb-2"></i><br>
+                                Trade History
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block scripts %}
 <script>
-// Update current time
-function updateTime() {
-    const now = new Date();
-    document.getElementById('current-time').textContent = now.toLocaleTimeString();
-}
-updateTime();
-setInterval(updateTime, 1000);
+document.addEventListener('DOMContentLoaded', function() {
+    // Stock search functionality
+    const searchInput = document.getElementById('stock-search');
+    const searchBtn = document.getElementById('search-btn');
+    const searchResults = document.getElementById('search-results');
 
-// Stock search functionality
-document.getElementById('stock-search').addEventListener('input', function() {
-    const query = this.value;
-    if (query.length > 0) {
-        fetch(`/api/stock_search?q=${query}`)
+    function performSearch() {
+        const query = searchInput.value.trim();
+        if (query.length < 1) {
+            searchResults.innerHTML = '';
+            return;
+        }
+
+        fetch(`/api/stock_search?q=${encodeURIComponent(query)}`)
             .then(response => response.json())
             .then(data => {
-                const resultsDiv = document.getElementById('search-results');
                 if (data.length > 0) {
-                    resultsDiv.innerHTML = data.map(stock => 
-                        `<a href="/stock/${stock.symbol}" class="btn btn-outline-secondary btn-sm me-2 mb-2">${stock.symbol}</a>`
+                    const resultsHtml = data.map(stock => 
+                        `<div class="list-group-item list-group-item-action" onclick="viewStock('${stock.symbol}')">
+                            <strong>${stock.symbol}</strong> - ${stock.name}
+                        </div>`
                     ).join('');
+                    searchResults.innerHTML = `<div class="list-group">${resultsHtml}</div>`;
                 } else {
-                    resultsDiv.innerHTML = '';
+                    searchResults.innerHTML = '<small class="text-muted">No results found</small>';
                 }
+            })
+            .catch(error => {
+                console.error('Search error:', error);
+                searchResults.innerHTML = '<small class="text-danger">Search error occurred</small>';
             });
-    } else {
-        document.getElementById('search-results').innerHTML = '';
     }
+
+    searchInput.addEventListener('input', performSearch);
+    searchBtn.addEventListener('click', performSearch);
+    
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const query = searchInput.value.trim();
+            if (query) {
+                window.location.href = `/stock/${query.toUpperCase()}`;
+            }
+        }
+    });
+
+    // Update time display
+    function updateTime() {
+        const now = new Date();
+        const timeString = now.toLocaleString();
+        const timeElement = document.getElementById('current-time');
+        if (timeElement) {
+            timeElement.textContent = timeString;
+        }
+    }
+    
+    updateTime();
+    setInterval(updateTime, 1000);
+
+    // Add hover effects to portfolio cards
+    const portfolioCards = document.querySelectorAll('.portfolio-card');
+    portfolioCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+            this.style.transition = 'transform 0.2s';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
 });
 
-document.getElementById('search-btn').addEventListener('click', function() {
-    const query = document.getElementById('stock-search').value.toUpperCase();
-    if (query) {
-        window.location.href = `/stock/${query}`;
-    }
-});
+function viewStock(symbol) {
+    window.location.href = `/stock/${symbol}`;
+}
 
-// Enter key support for search
-document.getElementById('stock-search').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        document.getElementById('search-btn').click();
-    }
-});
+// Auto-refresh economic data every 5 minutes
+setInterval(() => {
+    window.location.reload();
+}, 300000);
 </script>
+
+<style>
+.portfolio-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.portfolio-card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.list-group-item {
+    cursor: pointer;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+.btn {
+    transition: all 0.2s;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.card {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#current-time {
+    font-family: 'Courier New', monospace;
+}
+</style>
 {% endblock %}

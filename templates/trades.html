@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block title %}Trade History - iPortfolio.com{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-history text-primary me-2"></i>Trade History</h2>
+            <p class="text-muted">Your complete trading activity</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('trade') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>New Trade
+            </a>
+        </div>
+    </div>
+
+    {% if trades %}
+    <!-- Trade Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">{{ trades|length }}</h5>
+                    <p class="card-text">Total Trades</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-success">
+                        {{ trades|selectattr("action", "equalto", "BUY")|list|length }}
+                    </h5>
+                    <p class="card-text">Buy Orders</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-danger">
+                        {{ trades|selectattr("action", "equalto", "SELL")|list|length }}
+                    </h5>
+                    <p class="card-text">Sell Orders</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-info">
+                        ${{ "{:,.2f}".format(trades|sum(attribute="price")|default(0)) }}
+                    </h5>
+                    <p class="card-text">Total Value</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trade Table -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>Recent Trades</h5>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-secondary" onclick="filterTrades('all')">All</button>
+                        <button type="button" class="btn btn-outline-success" onclick="filterTrades('BUY')">Buy</button>
+                        <button type="button" class="btn btn-outline-danger" onclick="filterTrades('SELL')">Sell</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="tradesTable">
+                            <thead>
+                                <tr>
+                                    <th onclick="sortTable(0)">Date <i class="fas fa-sort"></i></th>
+                                    <th onclick="sortTable(1)">Symbol <i class="fas fa-sort"></i></th>
+                                    <th onclick="sortTable(2)">Action <i class="fas fa-sort"></i></th>
+                                    <th onclick="sortTable(3)">Quantity <i class="fas fa-sort"></i></th>
+                                    <th onclick="sortTable(4)">Price <i class="fas fa-sort"></i></th>
+                                    <th onclick="sortTable(5)">Total Value <i class="fas fa-sort"></i></th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for trade in trades %}
+                                <tr data-action="{{ trade.action }}">
+                                    <td>
+                                        <span class="d-none">{{ trade.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                                        {{ trade.timestamp.strftime('%m/%d/%Y') }}<br>
+                                        <small class="text-muted">{{ trade.timestamp.strftime('%H:%M') }}</small>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('stock_detail', symbol=trade.symbol) }}" class="text-decoration-none">
+                                            <strong>{{ trade.symbol }}</strong>
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if trade.action == 'BUY' %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ trade.action }}
+                                        </span>
+                                    </td>
+                                    <td>{{ "%.2f"|format(trade.quantity) }}</td>
+                                    <td>${{ "%.2f"|format(trade.price) }}</td>
+                                    <td>
+                                        <strong>${{ "{:,.2f}".format(trade.quantity * trade.price) }}</strong>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{{ url_for('stock_detail', symbol=trade.symbol) }}" 
+                                               class="btn btn-outline-info btn-sm"
+                                               title="View Stock Details">
+                                                <i class="fas fa-chart-line"></i>
+                                            </a>
+                                            <button class="btn btn-outline-primary btn-sm" 
+                                                    onclick="repeatTrade('{{ trade.symbol }}', '{{ trade.action }}', {{ trade.quantity }})"
+                                                    title="Repeat Trade">
+                                                <i class="fas fa-redo"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Chart -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-area me-2"></i>Trading Activity</h5>
+                </div>
+                <div class="card-body">
+                    <div id="tradingChart" style="height: 400px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- No Trades Message -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-chart-line fa-4x text-muted mb-4"></i>
+                    <h4 class="text-muted">No trades yet</h4>
+                    <p class="text-muted mb-4">Start building your portfolio by making your first trade</p>
+                    <a href="{{ url_for('trade') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus me-2"></i>Make Your First Trade
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+// Filter trades by action
+function filterTrades(action) {
+    const rows = document.querySelectorAll('#tradesTable tbody tr');
+    const buttons = document.querySelectorAll('.btn-group button');
+    
+    // Reset button styles
+    buttons.forEach(btn => {
+        btn.classList.remove('btn-success', 'btn-danger', 'btn-secondary');
+        btn.classList.add('btn-outline-secondary');
+    });
+    
+    // Highlight active button
+    event.target.classList.remove('btn-outline-secondary');
+    if (action === 'BUY') {
+        event.target.classList.add('btn-success');
+    } else if (action === 'SELL') {
+        event.target.classList.add('btn-danger');
+    } else {
+        event.target.classList.add('btn-secondary');
+    }
+    
+    // Filter rows
+    rows.forEach(row => {
+        if (action === 'all' || row.dataset.action === action) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// Sort table function
+function sortTable(columnIndex) {
+    const table = document.getElementById('tradesTable');
+    const tbody = table.tBodies[0];
+    const rows = Array.from(tbody.rows);
+    
+    // Determine sort direction
+    const currentSort = table.dataset.sortColumn;
+    const ascending = currentSort !== columnIndex.toString();
+    table.dataset.sortColumn = ascending ? columnIndex.toString() : '';
+    
+    // Sort rows
+    rows.sort((a, b) => {
+        let aVal = a.cells[columnIndex].textContent.trim();
+        let bVal = b.cells[columnIndex].textContent.trim();
+        
+        // Handle different data types
+        if (columnIndex === 0) { // Date
+            aVal = new Date(a.cells[columnIndex].querySelector('span').textContent);
+            bVal = new Date(b.cells[columnIndex].querySelector('span').textContent);
+        } else if (columnIndex === 3 || columnIndex === 4 || columnIndex === 5) { // Numbers
+            aVal = parseFloat(aVal.replace(/[$,]/g, ''));
+            bVal = parseFloat(bVal.replace(/[$,]/g, ''));
+        }
+        
+        if (aVal < bVal) return ascending ? -1 : 1;
+        if (aVal > bVal) return ascending ? 1 : -1;
+        return 0;
+    });
+    
+    // Rebuild table
+    rows.forEach(row => tbody.appendChild(row));
+    
+    // Update sort icons
+    const headers = table.querySelectorAll('th i.fas');
+    headers.forEach(icon => {
+        icon.className = 'fas fa-sort';
+    });
+    
+    if (ascending) {
+        headers[columnIndex].className = 'fas fa-sort-up';
+    } else {
+        headers[columnIndex].className = 'fas fa-sort-down';
+    }
+}
+
+// Repeat trade function
+function repeatTrade(symbol, action, quantity) {
+    const url = `{{ url_for('trade') }}?symbol=${symbol}&action=${action}&quantity=${quantity}`;
+    window.location.href = url;
+}
+
+// Create trading activity chart
+document.addEventListener('DOMContentLoaded', function() {
+    {% if trades %}
+    // Prepare data for chart
+    const trades = [
+        {% for trade in trades %}
+        {
+            date: '{{ trade.timestamp.strftime('%Y-%m-%d') }}',
+            action: '{{ trade.action }}',
+            value: {{ trade.quantity * trade.price }}
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+    
+    // Group trades by date and action
+    const dateGroups = {};
+    trades.forEach(trade => {
+        if (!dateGroups[trade.date]) {
+            dateGroups[trade.date] = { BUY: 0, SELL: 0 };
+        }
+        dateGroups[trade.date][trade.action] += trade.value;
+    });
+    
+    const dates = Object.keys(dateGroups).sort();
+    const buyValues = dates.map(date => dateGroups[date].BUY);
+    const sellValues = dates.map(date => dateGroups[date].SELL);
+    
+    const data = [
+        {
+            x: dates,
+            y: buyValues,
+            name: 'Buy Orders',
+            type: 'bar',
+            marker: { color: '#28a745' }
+        },
+        {
+            x: dates,
+            y: sellValues,
+            name: 'Sell Orders',
+            type: 'bar',
+            marker: { color: '#dc3545' }
+        }
+    ];
+    
+    const layout = {
+        title: 'Trading Activity Over Time',
+        xaxis: { title: 'Date' },
+        yaxis: { title: 'Trade Value ($)' },
+        barmode: 'group',
+        template: 'plotly_white'
+    };
+    
+    Plotly.newPlot('tradingChart', data, layout, { responsive: true });
+    {% endif %}
+});
+
+// Make table headers clickable
+document.addEventListener('DOMContentLoaded', function() {
+    const headers = document.querySelectorAll('#tradesTable th[onclick]');
+    headers.forEach(header => {
+        header.style.cursor = 'pointer';
+        header.style.userSelect = 'none';
+    });
+});
+</script>
+
+<style>
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+    cursor: pointer;
+    user-select: none;
+}
+
+.table th:hover {
+    background-color: #f8f9fa;
+}
+
+.badge {
+    font-size: 0.8rem;
+}
+
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+}
+
+.card {
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+#tradesTable tbody tr {
+    transition: background-color 0.2s;
+}
+
+#tradesTable tbody tr:hover {
+    background-color: #f8f9fa;
+}
+</style>
+{% endblock %}

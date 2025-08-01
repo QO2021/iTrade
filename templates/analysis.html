@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+
+{% block title %}Market Analysis - iPortfolio.com{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2><i class="fas fa-chart-line text-primary me-2"></i>Market Analysis</h2>
+            <p class="text-muted">Comprehensive analysis of economic indicators, sector trends, and market conditions</p>
+        </div>
+    </div>
+
+    <!-- Economic Indicators -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Economic Indicators</h5>
+                </div>
+                <div class="card-body">
+                    {% if economic_data %}
+                    <div class="row">
+                        <!-- CPI -->
+                        {% if economic_data.cpi %}
+                        <div class="col-md-2 mb-3">
+                            <div class="card bg-light text-center">
+                                <div class="card-body">
+                                    <h6 class="card-title">CPI</h6>
+                                    <h5 class="text-primary">{{ "%.1f"|format(economic_data.cpi.current) }}</h5>
+                                    {% if economic_data.cpi.change %}
+                                    <small class="{% if economic_data.cpi.change > 0 %}text-danger{% else %}text-success{% endif %}">
+                                        {{ "%.2f"|format(economic_data.cpi.change) }}
+                                    </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Unemployment -->
+                        {% if economic_data.unemployment %}
+                        <div class="col-md-2 mb-3">
+                            <div class="card bg-light text-center">
+                                <div class="card-body">
+                                    <h6 class="card-title">Unemployment</h6>
+                                    <h5 class="text-info">{{ "%.1f"|format(economic_data.unemployment.current) }}%</h5>
+                                    {% if economic_data.unemployment.change %}
+                                    <small class="{% if economic_data.unemployment.change > 0 %}text-danger{% else %}text-success{% endif %}">
+                                        {{ "%.2f"|format(economic_data.unemployment.change) }}%
+                                    </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Interest Rate -->
+                        {% if economic_data.interest_rate %}
+                        <div class="col-md-2 mb-3">
+                            <div class="card bg-light text-center">
+                                <div class="card-body">
+                                    <h6 class="card-title">Fed Rate</h6>
+                                    <h5 class="text-warning">{{ "%.2f"|format(economic_data.interest_rate.current) }}%</h5>
+                                    {% if economic_data.interest_rate.change %}
+                                    <small class="{% if economic_data.interest_rate.change > 0 %}text-danger{% else %}text-success{% endif %}">
+                                        {{ "%.2f"|format(economic_data.interest_rate.change) }}%
+                                    </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- 10Y Treasury -->
+                        {% if economic_data.bond_yield_10y %}
+                        <div class="col-md-2 mb-3">
+                            <div class="card bg-light text-center">
+                                <div class="card-body">
+                                    <h6 class="card-title">10Y Treasury</h6>
+                                    <h5 class="text-success">{{ "%.2f"|format(economic_data.bond_yield_10y.current) }}%</h5>
+                                    {% if economic_data.bond_yield_10y.change %}
+                                    <small class="{% if economic_data.bond_yield_10y.change > 0 %}text-danger{% else %}text-success{% endif %}">
+                                        {{ "%.2f"|format(economic_data.bond_yield_10y.change) }}%
+                                    </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- VIX -->
+                        {% if economic_data.vix %}
+                        <div class="col-md-2 mb-3">
+                            <div class="card bg-light text-center">
+                                <div class="card-body">
+                                    <h6 class="card-title">VIX</h6>
+                                    <h5 class="text-danger">{{ "%.1f"|format(economic_data.vix.current) }}</h5>
+                                    {% if economic_data.vix.previous %}
+                                    <small class="{% if economic_data.vix.current > economic_data.vix.previous %}text-danger{% else %}text-success{% endif %}">
+                                        {{ "%.1f"|format(economic_data.vix.current - economic_data.vix.previous) }}
+                                    </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Gold -->
+                        {% if economic_data.gold %}
+                        <div class="col-md-2 mb-3">
+                            <div class="card bg-light text-center">
+                                <div class="card-body">
+                                    <h6 class="card-title">Gold</h6>
+                                    <h5 class="text-warning">${{ "%.0f"|format(economic_data.gold.current) }}</h5>
+                                    {% if economic_data.gold.previous %}
+                                    <small class="{% if economic_data.gold.current > economic_data.gold.previous %}text-success{% else %}text-danger{% endif %}">
+                                        ${{ "%.0f"|format(economic_data.gold.current - economic_data.gold.previous) }}
+                                    </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Additional Indicators Row -->
+                    <div class="row">
+                        <!-- Oil -->
+                        {% if economic_data.oil %}
+                        <div class="col-md-2 mb-3">
+                            <div class="card bg-light text-center">
+                                <div class="card-body">
+                                    <h6 class="card-title">Oil (WTI)</h6>
+                                    <h5 class="text-dark">${{ "%.1f"|format(economic_data.oil.current) }}</h5>
+                                    {% if economic_data.oil.previous %}
+                                    <small class="{% if economic_data.oil.current > economic_data.oil.previous %}text-success{% else %}text-danger{% endif %}">
+                                        ${{ "%.1f"|format(economic_data.oil.current - economic_data.oil.previous) }}
+                                    </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- House Price Index -->
+                        {% if economic_data.house_price %}
+                        <div class="col-md-2 mb-3">
+                            <div class="card bg-light text-center">
+                                <div class="card-body">
+                                    <h6 class="card-title">House Prices</h6>
+                                    <h5 class="text-info">{{ "%.0f"|format(economic_data.house_price.current) }}</h5>
+                                    {% if economic_data.house_price.change %}
+                                    <small class="{% if economic_data.house_price.change > 0 %}text-success{% else %}text-danger{% endif %}">
+                                        {{ "%.1f"|format(economic_data.house_price.change) }}
+                                    </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Consumer Sentiment -->
+                        {% if economic_data.consumer_sentiment %}
+                        <div class="col-md-2 mb-3">
+                            <div class="card bg-light text-center">
+                                <div class="card-body">
+                                    <h6 class="card-title">Consumer Sentiment</h6>
+                                    <h5 class="text-primary">{{ "%.1f"|format(economic_data.consumer_sentiment.current) }}</h5>
+                                    {% if economic_data.consumer_sentiment.change %}
+                                    <small class="{% if economic_data.consumer_sentiment.change > 0 %}text-success{% else %}text-danger{% endif %}">
+                                        {{ "%.1f"|format(economic_data.consumer_sentiment.change) }}
+                                    </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted">
+                        <i class="fas fa-chart-line fa-3x mb-3"></i>
+                        <p>Economic data is currently unavailable. Please check your API configuration.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sector Analysis -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-industry me-2"></i>Sector Analysis</h5>
+                </div>
+                <div class="card-body">
+                    {% if sector_analyses %}
+                    <div class="row">
+                        {% for sector, analysis in sector_analyses.items() %}
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">{{ sector }}</h6>
+                                    <span class="badge bg-primary">AI Analysis</span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="analysis-text">
+                                        {{ analysis|safe }}
+                                    </div>
+                                </div>
+                                <div class="card-footer">
+                                    <small class="text-muted">
+                                        <i class="fas fa-robot me-1"></i>Generated by AI analysis
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted">
+                        <i class="fas fa-robot fa-3x mb-3"></i>
+                        <p>Sector analysis is currently unavailable. Please check your OpenAI API configuration.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Market Risk Indicators -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Market Risk Assessment</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card border-info">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title text-info">Market Volatility</h5>
+                                    {% if economic_data.vix %}
+                                    {% set vix_level = economic_data.vix.current %}
+                                    {% if vix_level < 20 %}
+                                    <span class="badge bg-success fs-6">Low ({{ "%.1f"|format(vix_level) }})</span>
+                                    <p class="mt-2">Market conditions appear stable</p>
+                                    {% elif vix_level < 30 %}
+                                    <span class="badge bg-warning fs-6">Moderate ({{ "%.1f"|format(vix_level) }})</span>
+                                    <p class="mt-2">Some market uncertainty present</p>
+                                    {% else %}
+                                    <span class="badge bg-danger fs-6">High ({{ "%.1f"|format(vix_level) }})</span>
+                                    <p class="mt-2">Significant market volatility expected</p>
+                                    {% endif %}
+                                    {% else %}
+                                    <span class="badge bg-secondary fs-6">N/A</span>
+                                    <p class="mt-2">Data unavailable</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-warning">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title text-warning">Interest Rate Environment</h5>
+                                    {% if economic_data.interest_rate %}
+                                    {% set fed_rate = economic_data.interest_rate.current %}
+                                    {% if fed_rate < 2 %}
+                                    <span class="badge bg-success fs-6">Accommodative ({{ "%.2f"|format(fed_rate) }}%)</span>
+                                    <p class="mt-2">Low rates support growth assets</p>
+                                    {% elif fed_rate < 5 %}
+                                    <span class="badge bg-warning fs-6">Neutral ({{ "%.2f"|format(fed_rate) }}%)</span>
+                                    <p class="mt-2">Balanced monetary policy</p>
+                                    {% else %}
+                                    <span class="badge bg-danger fs-6">Restrictive ({{ "%.2f"|format(fed_rate) }}%)</span>
+                                    <p class="mt-2">High rates may pressure valuations</p>
+                                    {% endif %}
+                                    {% else %}
+                                    <span class="badge bg-secondary fs-6">N/A</span>
+                                    <p class="mt-2">Data unavailable</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-danger">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title text-danger">Inflation Pressure</h5>
+                                    {% if economic_data.cpi %}
+                                    {% set cpi_change = economic_data.cpi.change if economic_data.cpi.change else 0 %}
+                                    {% if cpi_change < 0.1 %}
+                                    <span class="badge bg-success fs-6">Low</span>
+                                    <p class="mt-2">Inflation under control</p>
+                                    {% elif cpi_change < 0.3 %}
+                                    <span class="badge bg-warning fs-6">Moderate</span>
+                                    <p class="mt-2">Some inflationary pressure</p>
+                                    {% else %}
+                                    <span class="badge bg-danger fs-6">High</span>
+                                    <p class="mt-2">Rising inflation concerns</p>
+                                    {% endif %}
+                                    {% else %}
+                                    <span class="badge bg-secondary fs-6">N/A</span>
+                                    <p class="mt-2">Data unavailable</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.analysis-text {
+    white-space: pre-line;
+    line-height: 1.6;
+    font-size: 0.9rem;
+}
+
+.card {
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.badge.fs-6 {
+    font-size: 1rem !important;
+    padding: 0.5rem 1rem;
+}
+
+.text-center h5 {
+    margin-bottom: 1rem;
+}
+
+.card-body p {
+    margin-bottom: 0;
+    color: #6c757d;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add animation to cards
+    const cards = document.querySelectorAll('.card');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    });
+
+    cards.forEach((card) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'opacity 0.6s, transform 0.6s';
+        observer.observe(card);
+    });
+
+    // Auto-refresh economic data every 5 minutes
+    setInterval(() => {
+        window.location.reload();
+    }, 300000);
+});
+</script>
+{% endblock %}
